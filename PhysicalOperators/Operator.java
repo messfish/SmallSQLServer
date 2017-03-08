@@ -2,6 +2,11 @@ package PhysicalOperators;
 
 import TableElement.Tuple;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import Support.Mule;
+
 /**
  * This class is the top level of the whole operator class.
  * Notice there are two main abstract methods that needs to be
@@ -12,7 +17,7 @@ import TableElement.Tuple;
  *
  */
 public abstract class Operator {
-
+	
 	/**
 	 * This abstract method is used to get the next valid tuple 
 	 * from the table.
@@ -25,5 +30,14 @@ public abstract class Operator {
 	 * starting point of the table.
 	 */
 	public abstract void reset();
+	
+	/**
+	 * This abstract method is used to get the schema of the table
+	 * and store the result in a map, which has the string attribute
+	 * as the key, a mule class which includes the index of the attribute
+	 * and the data type of that attribute.
+	 * @return a hash map includes the schema of the table.
+	 */
+	public abstract Map<String, Mule> getSchema();
 	
 }
