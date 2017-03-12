@@ -27,6 +27,16 @@ public class Main {
 	// this string is the output directory of the file system.
 	private static String temp_dir;
 	// this string is the temporary file directory of the file system.
+	private static String test_dir;
+	// this string is the testing file directory of the file system.
+	
+	/**
+	 * this function is the setter method of the input directory string.
+	 * @param s the input directory.
+	 */
+	public static void setInput(String s) {
+		input_dir = s;
+	}
 	
 	/**
 	 * this function is the getter method of the input directory string.
@@ -50,6 +60,22 @@ public class Main {
 	 */
 	public static String getTemp() {
 		return temp_dir;
+	}
+	
+	/**
+	 * this function is the setter method of the test directory string.
+	 * @param s the test directory.
+	 */
+	public static void setTest(String s) {
+		test_dir = s;
+	}
+	
+	/**
+	 * this function is the getter method of the test directory string.
+	 * @return the test directory.
+	 */
+	public static String getTest() {
+		return test_dir;
 	}
 	
 	/**

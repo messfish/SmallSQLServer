@@ -2,13 +2,17 @@ package SQLParser;
 
 import SQLExpression.AddOperator;
 import SQLExpression.ColumnNode;
+import SQLExpression.DateValue;
 import SQLExpression.DivideOperator;
 import SQLExpression.DoubleValue;
 import SQLExpression.Expression;
+import SQLExpression.LongValue;
 import SQLExpression.MinusOperator;
 import SQLExpression.MultiplyOperator;
 import SQLExpression.NegativeValue;
 import SQLExpression.Parenthesis;
+import SQLExpression.StringValue;
+import SQLExpression.TimeValue;
 
 /**
  * This is the class that could parse the calculation string and return
@@ -91,11 +95,100 @@ public class CalculationParser {
 	}
 	
 	/**
-	 * This method checks whether the string is a number or not.
+	 * This method checks whether the string is a string value or
+	 * not. The string value should be any content that is surrounded
+	 * by double quotes.
 	 * @param s the string that will be checked.
-	 * @return the answer "The string is a number."
+	 * @return the boolean value shows whether the string is string or not.
 	 */
-	private boolean isNumber(String s) {
+	private boolean isString(String s) {
+		if(s.length()<2) return false;
+		return s.charAt(0)=='"'&&s.charAt(s.length()-1)=='"';
+	}
+	
+	/**
+	 * This method checks whether the string is a time value or not.
+	 * Normally the format of the time value should be "%%:%%:%%", the 
+	 * first one is the hour, the second one is the minute and the last
+	 * one is the second.
+	 * @param s the string that will be checked.
+	 * @return the boolean value shows whether the string is time or not.
+	 */
+	private boolean isTime(String s) {
+		/* Note the first and the last index of the string is the double
+		 * quote. So we should leave them out. */
+		if(s.length()<2) return false;
+		String[] time = s.substring(1,s.length()-1).split(":");
+		if(time.length!=3)
+			return false;
+		int[] parameters = {24,60,60};
+		for(int i=0;i<3;i++) {
+			if(time[i].length()!=2||!isLong(time[i]))
+				return false;
+			long data = Long.parseLong(time[i]);
+			if(data>=parameters[i])
+				return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * This method checks whether the string is a date value or not.
+	 * Normally the format of the date should be "%%%%/%%/%%", the first
+	 * one is the date, the second one is the month and the last one is 
+	 * the day.
+	 * @param s the string that will be checked.
+	 * @return the answer "The string is a long value."
+	 */
+	private boolean isDate(String s) {
+		if(s.length()<2) return false;
+		int[] range = {31,28,31,30,31,30,31,31,30,31,30,31};
+		int index = 0;
+		/* Note the first and the last index of the string is the double
+		 * quote. So we should leave them out. */
+		String[] date = s.substring(1, s.length() - 1).split("/");
+		if(date.length!=3) 
+			return false;
+		if(date[0].length()!=4||!isLong(date[0]))
+			return false;
+		long data = Long.parseLong(date[0]);
+		/* this indicates the date is a lunar year. */
+		if(data%400==0||(data%100!=0&&data%4==0))
+			range[1]++;
+		if(date[1].length()!=2||!isLong(date[1]))
+			return false;
+		data = Long.parseLong(date[1]);
+		if(data>12) 
+			return false;
+		index = (int) (data - 1);
+		if(date[2].length()!=2||!isLong(date[2]))
+			return false;
+		data = Long.parseLong(date[2]);
+		if(data>range[index]) 
+			return false;
+		return true;
+	}
+	
+	/**
+	 * This method checks whether the string is a long value or not.
+	 * @param s the string that will be checked.
+	 * @return the answer "The string is a long value."
+	 */
+	private boolean isLong(String s) {
+		try{
+			Long.parseLong(s);
+		}catch(Exception e) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * This method checks whether the string is a double value or not.
+	 * @param s the string that will be checked.
+	 * @return the answer "The string is a double value."
+	 */
+	private boolean isDouble(String s) {
 		try{
 			Double.parseDouble(s);
 		}catch(Exception e){
@@ -125,15 +218,22 @@ public class CalculationParser {
 			Expression dummy = new NegativeValue(factor());
 		    return dummy;
 		}
-		// by default, the token is either a double in String form
-		// or a String that stores the column name.
+		/* the string could be one of these queries, handle them seperately.
+		 * Double Long Time Date Column String. */
 		else if(index<endpoint){
-			if(isNumber(segments[index])){
+			if(isLong(segments[index])) {
+				long dummy = Long.parseLong(segments[index]);
+				result = new LongValue(dummy);
+			}else if(isDouble(segments[index])){
 				double dummy = Double.parseDouble(segments[index]);
 				result = new DoubleValue(dummy);
-			}else{
-				result = new ColumnNode(segments[index]);
-			}
+			}else if(isDate(segments[index])){
+				result = new DateValue(segments[index]);
+			}else if(isTime(segments[index])){
+				result = new TimeValue(segments[index]);
+			}else if(isString(segments[index])){
+				result = new StringValue(segments[index]);
+			}else result = new ColumnNode(segments[index]);
 		    index++;
 		}
 		return result;

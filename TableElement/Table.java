@@ -33,5 +33,24 @@ public class Table {
 	public Table(String atom) {
 		this.atom = atom;
 	}
+	
+	/**
+	 * This method is used to check whether two tables are equal or
+	 * not. we need to handle different types separately since there
+	 * are two different types of the table elements.
+	 * @param that the table that used to be checked.
+	 * @return the boolean value shows the two tables are equal or not.
+	 */
+	public boolean equals(Table that) {
+		if(that.atom!=null) {
+			if(atom==null) return false;
+			else return atom.equals(that.atom);
+		}
+		if(that.select!=null) {
+			if(select==null) return false;
+			else return select.equals(that.select);
+		}
+		return false;
+	}
 
 }

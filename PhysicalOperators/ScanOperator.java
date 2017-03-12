@@ -104,8 +104,6 @@ public class ScanOperator extends Operator {
 		}
 		/* this byte indicates whether the tuple is valid, skip it. */
 		index++;
-		/* the first 4 bytes is the order of the tuple, so skip it. */
-		index += 4;
 		Tuple result = new Tuple(schema.size());
 		int point = 0;
 		for(int i=0;i<typelist.size();i++) {

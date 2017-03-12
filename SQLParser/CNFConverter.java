@@ -33,9 +33,7 @@ import SQLExpression.MultipleExpression;
  * 
  * 4. push the and operator upwards until the root is an and 
  * operator and all the children are or operators with multiple
- * components. 
- * 
- * 5. last step. convert that back into the binary tree form.
+ * components. At this time we get the result: an expression in CNF form.
  * 
  * @author messfish
  *
@@ -46,7 +44,7 @@ public class CNFConverter {
 	// the variable that stores the newly generated root.
 	private Expression dummy;
 	// this variable mainly serves as the dummy root of the true root.
-	// generally it will be a parenthesis.
+	// generally it will be a multi and operator with root as the child.
 	private Expression temp1, temp2, child;
 	// these two variable mainly serves as nodes that traverse through
 	// the expression tree to change the structure of expression tree.
@@ -83,11 +81,11 @@ public class CNFConverter {
 	public void convert(Expression express) {
 		reorder(express);
 		pushNotDown();
+		/* notice for the gather() function, we do not change the variable
+		 * that points to the root by pointing to others. Also, we do not 
+		 * change those temp variables. So there is no need to set those
+		 * variables back to their modified state. */
 		gather();
-		/* do not forget to set the operators back! */
-		root = ((MultiAndOperator)dummy).getChild(0);
-		temp1 = root;
-		temp2 = dummy;
 		pushAndUp();
 	}
 	
@@ -220,7 +218,7 @@ public class CNFConverter {
 					NotOperator not = new NotOperator(or.getChild(i));
 					list.add(not);
 				}
-				/* the De Morgan law shows we need to change and to or. */
+				/* the De Morgan law shows we need to change or to and. */
 				temp1 = new MultiAndOperator(list);
 				((MultipleExpression)temp2).setChild(index, temp1);
 				pushNot(-1);
@@ -329,12 +327,15 @@ public class CNFConverter {
 				if(parent instanceof MultiAndOperator &&
 					child instanceof MultiOrOperator)
 					stack.push(mule);
-				MultipleExpression multi = (MultipleExpression)child;
-				for(int j=0;j<multi.size();j++) {
-					Expression get = multi.getChild(j);
-					if(get instanceof MultipleExpression) {
-						Mule added = new Mule(child, get, level);
-						queue.offer(added);
+				/* Note the child may not be an instance of multiple expression!. */
+				if(child instanceof MultipleExpression) {
+					MultipleExpression multi = (MultipleExpression)child;
+					for(int j=0;j<multi.size();j++) {
+						Expression get = multi.getChild(j);
+						if(get instanceof MultipleExpression) {
+							Mule added = new Mule(child, get, level);
+							queue.offer(added);
+						}
 					}
 				}
 			}

@@ -22,23 +22,23 @@ public class LogicalExpressionTest {
 	/** this case tests the sentence without parenthesis */
 	@Test
 	public void test1() {
-		String exp = "COUNT(A) < 3.2 AND MIN(B) > 12.0 + C OR MAX(D) = 4.0";
+		String exp = "COUNT(A) < 3.2 AND MIN(B) > 12.0 + C OR MAX(D) = 4";
 		LogicalExpressionParser parse = 
 				new LogicalExpressionParser(exp.split("\\s+"));
 		Expression express = parse.parse();
 		String expected = "[OR]" + "\n" +
 		                  "-[AND]" + "\n" +
 				          "--[<]" + "\n" +
-		                  "---[COUNT(A)]" + "\n" +
-				          "---[3.2]" + "\n" +
+		                  "---[Column: COUNT(A)]" + "\n" +
+				          "---[Double: 3.2]" + "\n" +
 		                  "--[>]" + "\n" +
-				          "---[MIN(B)]" + "\n" +
+				          "---[Column: MIN(B)]" + "\n" +
 		                  "---[+]" + "\n" +
-				          "----[12.0]" + "\n" +
-		                  "----[C]" + "\n" +
+				          "----[Double: 12.0]" + "\n" +
+		                  "----[Column: C]" + "\n" +
 				          "-[=]" + "\n" +
-		                  "--[MAX(D)]" + "\n" +
-				          "--[4.0]" + "\n";
+		                  "--[Column: MAX(D)]" + "\n" +
+				          "--[Long: 4]" + "\n";
 		StringBuilder sb = new StringBuilder();
 		express.print("", sb);
 		/* test whether the tree structure is the same in pre-order from. */
@@ -53,33 +53,33 @@ public class LogicalExpressionTest {
 	@Test
 	/** This case tests the case with the parenthesis. */
 	public void test2() {
-		String exp = "MIN(A) <= 12.0 * ( 3.1 + 4.2 ) AND " +
+		String exp = "MIN(A) <= 12 * ( 3.1 + 4.2 ) AND " +
 					 "( MAX(B) >= 16.0 OR SUM(C) <> 12.0 / ( 6.0 - 4.0 ) )";
 		LogicalExpressionParser parse = 
 				new LogicalExpressionParser(exp.split("\\s+"));
 		Expression express = parse.parse();
 		String expected = "[AND]" +"\n" +
 		                  "-[<=]" + "\n" +
-				          "--[MIN(A)]" + "\n" +
+				          "--[Column: MIN(A)]" + "\n" +
 		                  "--[*]" +"\n" +
-				          "---[12.0]" + "\n" +
+				          "---[Long: 12]" + "\n" +
 		                  "---[()]" + "\n" +
 		                  "----[+]" + "\n" +
-				          "-----[3.1]" + "\n" +
-		                  "-----[4.2]" + "\n" +
+				          "-----[Double: 3.1]" + "\n" +
+		                  "-----[Double: 4.2]" + "\n" +
 				          "-[()]" + "\n" +
 		                  "--[OR]" + "\n" +
 				          "---[>=]" + "\n" +
-		                  "----[MAX(B)]" + "\n" +
-				          "----[16.0]" + "\n" +
+		                  "----[Column: MAX(B)]" + "\n" +
+				          "----[Double: 16.0]" + "\n" +
 		                  "---[<>]" + "\n" +
-				          "----[SUM(C)]" + "\n" +
+				          "----[Column: SUM(C)]" + "\n" +
 		                  "----[/]" + "\n" +
-				          "-----[12.0]" + "\n" +
+				          "-----[Double: 12.0]" + "\n" +
 		                  "-----[()]" + "\n" +
 		                  "------[-]" + "\n" +
-				          "-------[6.0]" + "\n" +
-		                  "-------[4.0]" + "\n";
+				          "-------[Double: 6.0]" + "\n" +
+		                  "-------[Double: 4.0]" + "\n";
 		StringBuilder sb = new StringBuilder();
 		express.print("", sb);
 		/* test whether the tree structure is the same in pre-order form. */
@@ -105,30 +105,30 @@ public class LogicalExpressionTest {
 						  "-[OR]" + "\n" +
 		                  "--[NOT]" + "\n" +
 				          "---[<]" + "\n" +
-		                  "----[AVG(A)]" + "\n" +
-				          "----[10.0]" + "\n" +
+		                  "----[Column: AVG(A)]" + "\n" +
+				          "----[Double: 10.0]" + "\n" +
 		                  "--[NOT]" + "\n" +
 				          "---[()]" + "\n" +
 		                  "----[AND]" + "\n" +
 				          "-----[>]" + "\n" +
-		                  "------[AVG(D)]" + "\n" +
-				          "------[4.3]" + "\n" +
+		                  "------[Column: AVG(D)]" + "\n" +
+				          "------[Double: 4.3]" + "\n" +
 		                  "-----[()]" + "\n" +
 				          "------[OR]" + "\n" +
 		                  "-------[=]" + "\n" +
-				          "--------[SUM(B)]" + "\n" +
-		                  "--------[10.2]" + "\n" +
+				          "--------[Column: SUM(B)]" + "\n" +
+		                  "--------[Double: 10.2]" + "\n" +
 				          "-------[<]" + "\n" +
-		                  "--------[MIN(C)]" + "\n" +
+		                  "--------[Column: MIN(C)]" + "\n" +
 				          "--------[/]" + "\n" +
-		                  "---------[10.0]" + "\n" +
+		                  "---------[Double: 10.0]" + "\n" +
 				          "---------[()]" + "\n" +
 				          "----------[+]" + "\n" +
-		                  "-----------[1.3]" + "\n" +
-				          "-----------[3.7]" + "\n" +
+		                  "-----------[Double: 1.3]" + "\n" +
+				          "-----------[Double: 3.7]" + "\n" +
 		                  "-[<]" + "\n" + 
-				          "--[SUM(E)]" + "\n" +
-		                  "--[9.0]" + "\n";
+				          "--[Column: SUM(E)]" + "\n" +
+		                  "--[Double: 9.0]" + "\n";
 		StringBuilder sb = new StringBuilder();
 		express.print("", sb);
 		/* test whether the tree structure is the same in pre-order form. */

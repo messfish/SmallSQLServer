@@ -9,6 +9,7 @@ import SQLExpression.AndOperator;
 import SQLExpression.AnyOperator;
 import SQLExpression.CloneExpressionVisitor;
 import SQLExpression.ColumnNode;
+import SQLExpression.DateValue;
 import SQLExpression.DivideOperator;
 import SQLExpression.DoubleValue;
 import SQLExpression.Equals;
@@ -20,6 +21,7 @@ import SQLExpression.InOperator;
 import SQLExpression.LessThan;
 import SQLExpression.LessThanOrEquals;
 import SQLExpression.LikeOperator;
+import SQLExpression.LongValue;
 import SQLExpression.MinusOperator;
 import SQLExpression.MultiAndOperator;
 import SQLExpression.MultiOrOperator;
@@ -31,6 +33,7 @@ import SQLExpression.OrOperator;
 import SQLExpression.Parenthesis;
 import SQLExpression.StringValue;
 import SQLExpression.Subselect;
+import SQLExpression.TimeValue;
 
 /**
  * This class is used to clone an expression tree with some specific rules:
@@ -366,7 +369,7 @@ public class CloneExpression implements CloneExpressionVisitor {
 	 */
 	@Override
 	public Expression visit(ColumnNode node) {
-		return new ColumnNode(node.getData());
+		return new ColumnNode(node.getWholeColumnName());
 	}
 
 	/**
@@ -408,6 +411,39 @@ public class CloneExpression implements CloneExpressionVisitor {
 		for(int i=0;i<operator.size();i++)
 			list.add(operator.getChild(i).accept(this));
 		return new MultiOrOperator(list);
+	}
+
+	/**
+	 * this method makes a clone of the expression the method specifies.
+	 * generate a new long expression with the copied value.
+	 * @param operator the expression that will be visited.
+	 * @return the newly cloned expression.
+	 */
+	@Override
+	public Expression visit(LongValue value) {
+		return new LongValue(value.getData());
+	}
+
+	/**
+	 * this method makes a clone of the expression the method specifies.
+	 * generate a new data expression with the copied value.
+	 * @param operator the expression that will be visited.
+	 * @return the newly cloned expression.
+	 */
+	@Override
+	public Expression visit(DateValue value) {
+		return new DateValue(value.getString());
+	}
+
+	/**
+	 * this method makes a clone of the expression the method specifies.
+	 * generate a new data expression with the copied value.
+	 * @param operator the expression that will be visited.
+	 * @return the newly cloned expression.
+	 */
+	@Override
+	public Expression visit(TimeValue value) {
+		return new TimeValue(value.getString());
 	}
 
 }

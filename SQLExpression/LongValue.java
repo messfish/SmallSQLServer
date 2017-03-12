@@ -1,21 +1,19 @@
 package SQLExpression;
 
 /**
- * This class handles the string value of the expression tree.
- * It extends the Unary expression class.
- * NOTE: THIS PART SHOULD BE MODIFIED!
+ * This class handles the long value of the expression tree.
  * @author messfish
  *
  */
-public class ColumnNode extends Expression{
+public class LongValue extends Expression{
 
-	private String data;
+	private long data;
 	
 	/**
 	 * Constructor: This class assign the data by using the argument.
 	 * @param data the data that will be stored.
 	 */
-	public ColumnNode(String data) {
+	public LongValue(long data) {
 		this.data = data;
 	}
 	
@@ -23,16 +21,8 @@ public class ColumnNode extends Expression{
 	 * the getter method of the data.
 	 * @return the data.
 	 */
-	public String getWholeColumnName() {
+	public long getData() {
 		return data;
-	}
-	
-	/**
-	 * this is the getter method of the table name from the column.
-	 * @return the table name.
-	 */
-	public String getTableName() {
-		return data.split(".")[0];
 	}
 
 	/**
@@ -63,7 +53,7 @@ public class ColumnNode extends Expression{
 	 */
 	@Override
 	public String getString() {
-		return "Column: " + data;
+		return String.valueOf(data);
 	}
 	
 	/**
@@ -75,7 +65,7 @@ public class ColumnNode extends Expression{
 	 */
 	@Override
 	public void print(String s, StringBuilder sb) {
-		sb.append(s + "[" + "Column: " + data + "]").append("\n");
+		sb.append(s + "[" + "Long: " + data + "]").append("\n");
 	}
 	
 	/**

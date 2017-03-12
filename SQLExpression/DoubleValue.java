@@ -2,7 +2,6 @@ package SQLExpression;
 
 /**
  * This class handles the double value of the expression tree.
- * It extends the Unary expression class.
  * @author messfish
  *
  */
@@ -66,7 +65,7 @@ public class DoubleValue extends Expression{
 	 */
 	@Override
 	public void print(String s, StringBuilder sb) {
-		sb.append(s + "[" + data + "]").append("\n");
+		sb.append(s + "[" + "Double: " + data + "]").append("\n");
 	}
 	
 	/**

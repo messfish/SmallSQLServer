@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import SQLExpression.ColumnNode;
 import SQLExpression.Expression;
 import SQLExpression.StringValue;
 import TableElement.Table;
@@ -38,8 +39,19 @@ public class PlainSelect {
 	// this list stores a map that stores the alias name with their
 	// tables, if there are no alias, store the table name instead.
 	// Note the alias is the key and the original table is the value.
+	private Expression whereexpress;
+	// this is the root of the where expression.
 	private Expression havingexpress; 
 	// this is the root of the having expression.
+	private boolean isDescending;
+	// this method is used to check whether we order the table elements
+	// in the descending order or not, I set it to "true" when the order
+	// is descending, "false" means the order is ascending.
+	private int startpoint, endpoint;
+	// this two value indicates the starting point and the ending point
+	// of the order by query.
+	private boolean isDistinct;
+	// this value indicates whether the select query pick out distinct tuples.
 	
 	/**
 	 * Constructor: It takes a query as argument and divide it into 
@@ -60,49 +72,50 @@ public class PlainSelect {
 		query = s;
 		String[] array = s.split("\\s+");
 		int state = 0, index = 0;
-		/* use the automation theory to divide the query. */
-		while(index < array.length) {
+		/* use the automation theory to divide the query. Notice the end of 
+		 * the string array must be a semicolon, so skip it.*/
+		while(index < array.length - 1) {
 			switch(state){
 			/* case 0 indicates the SELECT query */
 			case 0: int[] state0 = findNext(array, "FROM", index + 1, 1);
-					parseSelectPart(BuildString(array, index, state0[0]));
+					parseSelectPart(BuildString(array, index + 1, state0[0]));
 					index = state0[0];
 					state = state0[1];
 					break;
 			/* case 1 indicates the FROM query */
 			case 1: String[] target0 = {"WHERE", "GROUP", "", "ORDER"};
 					int[] state1 = findNextInArray(array, target0, index + 1, 2);
-					int dummy1 = state1 == null? array.length : state1[0];
-					parseFromPart(BuildString(array, index, dummy1));
+					int dummy1 = state1 == null? array.length - 1 : state1[0];
+					parseFromPart(BuildString(array, index + 1, dummy1));
 					index = dummy1;
 					state = state1 == null? -1 : state1[1];
 					break;
 			/* case 2 indicates the WHERE query */
 			case 2: String[] target1 = {"GROUP", "", "ORDER"};
 					int[] state2 = findNextInArray(array, target1, index + 1, 3);
-					int dummy2 = state2 == null? array.length : state2[0];
-					parseWherePart(BuildString(array, index, dummy2));
+					int dummy2 = state2 == null? array.length - 1: state2[0];
+					parseWherePart(BuildString(array, index + 1, dummy2));
 					index = dummy2;
 					state = state2 == null? -1 : state2[1];
 					break;
 			/* case 3 indicates the GROUP BY query */
 			case 3: String[] target2 = {"HAVING", "ORDER"};
 					int[] state3 = findNextInArray(array, target2, index + 2, 4);
-					int dummy3 = state3 == null? array.length : state3[0];
-					parseGroupByPart(BuildString(array, index, dummy3));
+					int dummy3 = state3 == null? array.length - 1: state3[0];
+					parseGroupByPart(BuildString(array, index + 2, dummy3));
 					index = dummy3;
 					state = state3 == null? -1 : state3[1];
 					break;
 			/* case 4 indicates the HAVING query */
 			case 4: int[] state4 = findNext(array, "ORDER", index + 1, 5);
-					int dummy4 = state4 == null? array.length : state4[0];
-					parseHavingPart(BuildString(array, index, dummy4));
+					int dummy4 = state4 == null? array.length - 1: state4[0];
+					parseHavingPart(BuildString(array, index + 1, dummy4));
 					index = dummy4;
 					state = state4 == null? -1 : state4[1];
 					break;
 			/* case 5 indicates the ORDER BY query 
 			 * Normally, this will be the end of a query.*/
-			case 5: parseOrderByPart(BuildString(array, index + 2, array.length));
+			case 5: parseOrderByPart(BuildString(array, index + 2, array.length - 1));
 					index = array.length;
 			}
 		}
@@ -185,13 +198,19 @@ public class PlainSelect {
 	 * array, check whether the left part is a column name or is an 
 	 * aggregation name(also do not forget the "AS"), and store the 
 	 * elements (expression and alias, if there are) into the global 
-	 * variables above.
+	 * variables above. Note is the expression is just an '*', simply
+	 * return an empty list.
 	 * @param s the select string which will be parsed.
 	 */
 	private void parseSelectPart(String s) {
 		String[] expressionlist = s.split(",");
 		String[] reserved = {"COUNT", "AVG", "SUM", "MIN", "MAX"};
 		Set<String> set = new HashSet<>();
+		/* this indicates the select query only contains an "*", simply return. */
+		if(expressionlist[0].equals("*")||
+				(expressionlist.length>1&&expressionlist[1].equals("*"))) 
+			return;
+		if(expressionlist[0].equals("DISTINCT")) isDistinct = true;
 		for(int i=0;i<reserved.length;i++)
 			set.add(reserved[i]);
 		for(String str : expressionlist) {
@@ -200,7 +219,7 @@ public class PlainSelect {
 			if(temp.length > 1 && temp[temp.length-2].equals("AS")){
 				/* left expression is a column name. */
 				if(temp.length==3){
-					Expression column = new StringValue(temp[0]);
+					Expression column = new ColumnNode(temp[0]);
 					selectlist.add(column);
 				}
 				/* left expression is an aggregation. */
@@ -208,7 +227,7 @@ public class PlainSelect {
 					String data = "";
 					for(int i=0;i<temp.length-2;i++)
 						data += temp[i];
-					Expression aggregate = new StringValue(data);
+					Expression aggregate = new ColumnNode(data);
 					selectlist.add(aggregate);
 				}else{
 					String[] change = new String[temp.length - 2];
@@ -223,7 +242,7 @@ public class PlainSelect {
 			else{
 				/* left expression is a column name. */
 				if(temp.length==1){
-					Expression column = new StringValue(temp[0]);
+					Expression column = new ColumnNode(temp[0]);
 					selectlist.add(column);
 				}
 				/* left expression is an aggregation. */
@@ -231,7 +250,7 @@ public class PlainSelect {
 					String data = "";
 					for(int i=0;i<temp.length;i++)
 						data += temp[i];
-					Expression aggregate = new StringValue(data);
+					Expression aggregate = new ColumnNode(data);
 					selectlist.add(aggregate);
 				}
 				select_alias.add("");
@@ -252,10 +271,10 @@ public class PlainSelect {
 		 * parenthesis, only when we meet a "," and the number of
 		 * parenthesis is zero can we know we reach the end of a table expression */
 		int index = 0, numofparenthesis = 0, point = 0;
-		while(index < s.length()) {
-			if(s.charAt(index)=='(') numofparenthesis++;
-			if(s.charAt(index)==')') numofparenthesis--;
-			if(s.charAt(index)==',' && numofparenthesis == 0) {
+		while(index <= s.length()) {
+			if(index<s.length()&&s.charAt(index)=='(') numofparenthesis++;
+			if(index<s.length()&&s.charAt(index)==')') numofparenthesis--;
+			if(index==s.length()||(s.charAt(index)==','&&numofparenthesis==0)) {
 				Table table = null;
 				String sub = s.substring(point, index).trim();
 				String[] array = sub.split("\\s+");
@@ -290,6 +309,9 @@ public class PlainSelect {
 		String[] array = s.split("\\s+");
 	    LogicalExpressionParser logic = new LogicalExpressionParser(array);
 	    Expression express = logic.parse();
+	    CNFConverter cnf = new CNFConverter();
+	    cnf.convert(express);
+	    whereexpress = express;
 	}
 	
 	/**
@@ -355,12 +377,34 @@ public class PlainSelect {
 	 * @param s the order by string which will be parsed.
 	 */
 	private void parseOrderByPart(String s) {
-		String[] array = s.split(",");
-		for(String str : array) {
-			String[] express = str.trim().split("\\s+");
-			CalculationParser calculate = new CalculationParser(express);
-			Expression root = calculate.parse();
-			orderbylist.add(root);
+		String[] array = s.split("\\s+");
+		int index = 0;
+		/* this for loop extracts the order by elements out without considering
+		 * the "DESC" and "LIMIT". */
+		List<String> list = new ArrayList<>();
+		for(;index<=array.length;index++) {
+			if(index==array.length||array[index].equals("DESC")||
+					array[index].equals("LIMIT")||array[index].equals(",")) {
+				String[] temp = new String[list.size()];
+				for(int i=0;i<temp.length;i++)
+					temp[i] = list.get(i);
+				CalculationParser cal = new CalculationParser(temp);
+				Expression root = cal.parse();
+				orderbylist.add(root);
+				list = new ArrayList<>();
+				if(index<array.length&&array[index].equals(",")) continue;
+				else break;
+			}
+			else list.add(array[index]);
+		}
+		if(index!=array.length&&array[index].equals("DESC")) {
+			isDescending = true;
+			index++;
+		}
+		if(index!=array.length&&array[index].equals("LIMIT")) {
+			String get1 = array[index+1], get2 = array[index+3];
+			startpoint = Integer.parseInt(get1);
+			endpoint = Integer.parseInt(get2);
 		}
 	}
 	
@@ -397,6 +441,14 @@ public class PlainSelect {
 	}
 	
 	/**
+	 * this is the getter method of the where expression.
+	 * @return the where expression tree.
+	 */
+	public Expression getWhereExpression() {
+		return whereexpress;
+	}
+	
+	/**
 	 * this is the getter method for the group by list.
 	 * @return the group by list.
 	 */
@@ -420,4 +472,46 @@ public class PlainSelect {
 		return orderbylist;
 	}
 
+	/**
+	 * this method returns whether the query is descending or not.
+	 * @return the value indicates whether the query is descending.
+	 */
+	public boolean isDesc() {
+		return isDescending;
+	}
+	
+	/**
+	 * this is the getter method of the starting point.
+	 * @return the starting point of the query.
+	 */
+	public int getStartPoint() {
+		return startpoint;
+	}
+	
+	/**
+	 * this is the getter method of the ending point.
+	 * @return the ending point of the query.
+	 */
+	public int getEndPoint() {
+		return endpoint;
+	}
+	
+	/**
+	 * this is the getter method of whether the query is distinct or not.
+	 * @return the boolean value shows the query is distinct.
+	 */
+	public boolean isDistinct() {
+		return isDistinct;
+	}
+	
+	/**
+	 * This method is used to check whether two objects are equal. 
+	 * It is mainly used for debugging.
+	 * @param plain another plain select object to be checked.
+	 * @return the boolean value about whether these two are equal.
+	 */
+	public boolean equals(PlainSelect plain) {
+		return getQuery().equals(plain.getQuery());
+	}
+	
 }

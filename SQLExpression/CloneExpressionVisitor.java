@@ -50,6 +50,12 @@ public interface CloneExpressionVisitor {
 	
 	Expression visit(DoubleValue value);
 	
+	Expression visit(LongValue value);
+	
+	Expression visit(DateValue value);
+	
+	Expression visit(TimeValue value);
+	
 	Expression visit(StringValue value);
 	
 	Expression visit(ColumnNode node);

@@ -49,6 +49,12 @@ public interface ExpressionVisitor {
 	
 	void visit(DoubleValue value);
 	
+	void visit(LongValue value);
+	
+	void visit(DateValue value);
+	
+	void visit(TimeValue value);
+	
 	void visit(StringValue value);
 	
 	void visit(ColumnNode node);

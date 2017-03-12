@@ -2,7 +2,6 @@ package PhysicalOperators;
 
 import TableElement.Tuple;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import Support.Mule;

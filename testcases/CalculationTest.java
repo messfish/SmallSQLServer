@@ -23,13 +23,13 @@ public class CalculationTest {
 		Expression express = parse.parse();
 		String expected = "[-]" + "\n" +
 		                  "-[+]" + "\n" +
-				          "--[A]" + "\n" +
+				          "--[Column: A]" + "\n" +
 		                  "--[/]" + "\n" +
 				          "---[*]" + "\n" +
-		                  "----[B]" + "\n" +
-				          "----[C]" + "\n" +
-		                  "---[1.2]" + "\n" +
-				          "-[3.4]" + "\n";
+		                  "----[Column: B]" + "\n" +
+				          "----[Column: C]" + "\n" +
+		                  "---[Double: 1.2]" + "\n" +
+				          "-[Double: 3.4]" + "\n";
 		StringBuilder sb = new StringBuilder();
 		express.print("", sb);
 		/* test whether the tree structure is the same. */
@@ -50,15 +50,15 @@ public class CalculationTest {
 		String expected = "[()]" + "\n" +
 		                  "-[/]" + "\n" +
 				          "--[*]" + "\n" +
-		                  "---[A]" + "\n" +
+		                  "---[Column: A]" + "\n" +
 				          "---[()]" + "\n" +
 		                  "----[-]" + "\n" +
-				          "-----[B]" + "\n" +
+				          "-----[Column: B]" + "\n" +
 		                  "-----[()]" + "\n" +
 				          "------[-]" + "\n" +
-		                  "-------[3.1]" + "\n" +
-				          "-------[D]" + "\n" +
-		                  "--[4.0]" + "\n";
+		                  "-------[Double: 3.1]" + "\n" +
+				          "-------[Column: D]" + "\n" +
+		                  "--[Double: 4.0]" + "\n";
 		StringBuilder sb = new StringBuilder();
 		express.print("", sb);
 		/* test whether the tree structures are the same. */
@@ -79,15 +79,15 @@ public class CalculationTest {
 		String expected = "[*]" + "\n" +
 		                  "-[()]" + "\n" +
 				          "--[~]" + "\n" +
-		                  "---[A]" + "\n" +
+		                  "---[Column: A]" + "\n" +
 				          "-[()]" + "\n" +
 				          "--[+]" + "\n" +
-		                  "---[4.5]" + "\n" +
+		                  "---[Double: 4.5]" + "\n" +
 				          "---[/]" + "\n" +
 		                  "----[()]" + "\n" +
 				          "-----[~]" + "\n" +
-		                  "------[3.2]" + "\n" +
-				          "----[B]" + "\n";
+		                  "------[Double: 3.2]" + "\n" +
+				          "----[Column: B]" + "\n";
 		StringBuilder sb = new StringBuilder();
 		express.print("", sb);
 		/* test whether the tree structures are the same. */
