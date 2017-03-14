@@ -14,6 +14,7 @@ import SQLExpression.GreaterThanOrEquals;
 import SQLExpression.InOperator;
 import SQLExpression.LessThan;
 import SQLExpression.LessThanOrEquals;
+import SQLExpression.LikeOperator;
 import SQLExpression.NotEquals;
 import SQLExpression.NotOperator;
 import SQLExpression.OrOperator;
@@ -29,7 +30,7 @@ import SQLExpression.Subselect;
  * Here is the grammar of the parsing:
  * E := Co {{AND|OR} Co}*
  * Co:= NOT Co | NOT (E) | (E) | Atom
- * Atom := Ca {{<|>|<=|>=|=|<>|}Ca} 
+ * Atom := Ca {{<|>|<=|>=|=|<>|LIKE}Ca} 
  * 
  * The E stands for expression, this is usually constructed by
  * a list of comparison linked with "AND" or "OR". 
@@ -53,6 +54,7 @@ public class LogicalExpressionParser {
 	// the set of string segments that the index needs to stop at this point.
 	private Set<String> subqueryset;
 	// the set of subquery that the index needs to stop at this point.
+	// usually it indicates there is a sub query.
 	
 	/**
 	 * Constructor: this constructor takes an array of string as the 
@@ -62,7 +64,8 @@ public class LogicalExpressionParser {
 	public LogicalExpressionParser(String[] input) {
 		tokens = input;
 		index = 0;
-		String[] stoplist = {"<",">","<=",">=","=","<>","NOT","IN"};
+		String[] stoplist = {"<",">","<=",">=","=","<>","NOT",
+				"IN","LIKE","ANY","ALL","EXISTS"};
 		stopset = new HashSet<>();
 		for(String str : stoplist)
 			stopset.add(str);
@@ -91,7 +94,7 @@ public class LogicalExpressionParser {
 	private String BuildString(int start, int endpoint) {
 		StringBuilder sb = new StringBuilder();
 		while(start < endpoint) {
-			sb.append(tokens[start]).append("\n");
+			sb.append(tokens[start]).append(" ");
 			start++;
 		}
 		sb.deleteCharAt(sb.length() - 1);
@@ -141,7 +144,9 @@ public class LogicalExpressionParser {
 	
 	/**
 	 * This method is used to deal with the language that has a subquery
-	 * words in it. It will return an expression tree.
+	 * words in it. It will return an expression tree. Notice there will
+	 * be an expression that is Not Like. Be sure to take care of this
+	 * special case since there it will not involve an sub query.
 	 * @param endpoint the integer that the index will end at.
 	 * @return an expression tree where the subquery words or "not" or
 	 * the comparison expression could be the root.
@@ -150,7 +155,7 @@ public class LogicalExpressionParser {
 		Expression result = null;
 		int start = index;
 		/* if the first token equals with "EXISTS", that means
-		 * this is an exist subquery. */
+		 * this is an exist sub query. */
 		if(tokens[start].equals("EXISTS")){
 			String subquery = BuildString(start+2, endpoint-1);
 			Expression sub = new Subselect(subquery);
@@ -180,14 +185,25 @@ public class LogicalExpressionParser {
 			int pointer = 0;
 			while(index<tokens.length&&stopset.contains(tokens[index]))
 				connection[pointer++] = tokens[index++];
-			/* get the sub query into the right expression tree. */
-			String subquery = BuildString(index+pointer, endpoint-1);
-			Expression sub = new Subselect(subquery);
-			Expression right = new Parenthesis(sub);
-			/* use this method to retrieve the root back. */
-			result = buildSub(connection, pointer, left, right);
-			// don't forget to put the index at the next valid point!
-			index = endpoint; 
+			/* handle the "not like" case at here. */
+			if(pointer>1&&connection[1].equals("LIKE")) {
+				CalculationParser rcal = 
+						new CalculationParser(tokens,index,endpoint);
+				Expression right = rcal.parse();
+				Expression like = new LikeOperator(left, right);
+				result = new NotOperator(like);
+			}else{
+				/* get the sub query into the right expression tree. 
+				 * Note the current index is the left parenthesis, so
+				 * increment the index by 1. */
+				String subquery = BuildString(index + 1, endpoint-1);
+				Expression sub = new Subselect(subquery);
+				Expression right = new Parenthesis(sub);
+				/* use this method to retrieve the root back. */
+				result = buildSub(connection, pointer, left, right);
+				// don't forget to put the index at the next valid point!
+				index = endpoint; 
+			}
 		}
 		return result;
 	}
@@ -213,7 +229,7 @@ public class LogicalExpressionParser {
 		int dummy = index; // mark the index of the comparison operator.
 		CalculationParser rcal = new CalculationParser(tokens,dummy+1,endpoint);
 		Expression right = rcal.parse();
-		/* this part mainly handles the six different comparisons shown above.
+		/* this part mainly handles the seven different comparisons shown above.
 		 * construct the comparison node with the left and right calculation
 		 * expressions which are shown above. */
 		if(tokens[dummy].equals("<")) 
@@ -228,6 +244,8 @@ public class LogicalExpressionParser {
 			result = new Equals(left,right);
 		else if(tokens[dummy].equals("<>")) 
 			result = new NotEquals(left,right);
+		else if(tokens[dummy].equals("LIKE"))
+			result = new LikeOperator(left,right);
 		index = endpoint; 
 		// At last, do not forget to assign the index to endpoint!
 		return result;

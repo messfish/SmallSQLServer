@@ -9,7 +9,6 @@ import java.util.Set;
 
 import SQLExpression.ColumnNode;
 import SQLExpression.Expression;
-import SQLExpression.StringValue;
 import TableElement.Table;
 
 /**
@@ -43,7 +42,7 @@ public class PlainSelect {
 	// this is the root of the where expression.
 	private Expression havingexpress; 
 	// this is the root of the having expression.
-	private boolean isDescending;
+	private int[] desclist;
 	// this method is used to check whether we order the table elements
 	// in the descending order or not, I set it to "true" when the order
 	// is descending, "false" means the order is ascending.
@@ -52,6 +51,12 @@ public class PlainSelect {
 	// of the order by query.
 	private boolean isDistinct;
 	// this value indicates whether the select query pick out distinct tuples.
+	private int uniontype;
+	// this value indicates the type of the union, the details will be 
+	// expressed in the getter method of this variable.
+	private PlainSelect[] sub = new PlainSelect[2];
+	// this variable is used to store the two sub query if there is a
+	// union key word presenting. 
 	
 	/**
 	 * Constructor: It takes a query as argument and divide it into 
@@ -72,53 +77,99 @@ public class PlainSelect {
 		query = s;
 		String[] array = s.split("\\s+");
 		int state = 0, index = 0;
-		/* use the automation theory to divide the query. Notice the end of 
-		 * the string array must be a semicolon, so skip it.*/
-		while(index < array.length - 1) {
-			switch(state){
-			/* case 0 indicates the SELECT query */
-			case 0: int[] state0 = findNext(array, "FROM", index + 1, 1);
-					parseSelectPart(BuildString(array, index + 1, state0[0]));
-					index = state0[0];
-					state = state0[1];
-					break;
-			/* case 1 indicates the FROM query */
-			case 1: String[] target0 = {"WHERE", "GROUP", "", "ORDER"};
-					int[] state1 = findNextInArray(array, target0, index + 1, 2);
-					int dummy1 = state1 == null? array.length - 1 : state1[0];
-					parseFromPart(BuildString(array, index + 1, dummy1));
-					index = dummy1;
-					state = state1 == null? -1 : state1[1];
-					break;
-			/* case 2 indicates the WHERE query */
-			case 2: String[] target1 = {"GROUP", "", "ORDER"};
-					int[] state2 = findNextInArray(array, target1, index + 1, 3);
-					int dummy2 = state2 == null? array.length - 1: state2[0];
-					parseWherePart(BuildString(array, index + 1, dummy2));
-					index = dummy2;
-					state = state2 == null? -1 : state2[1];
-					break;
-			/* case 3 indicates the GROUP BY query */
-			case 3: String[] target2 = {"HAVING", "ORDER"};
-					int[] state3 = findNextInArray(array, target2, index + 2, 4);
-					int dummy3 = state3 == null? array.length - 1: state3[0];
-					parseGroupByPart(BuildString(array, index + 2, dummy3));
-					index = dummy3;
-					state = state3 == null? -1 : state3[1];
-					break;
-			/* case 4 indicates the HAVING query */
-			case 4: int[] state4 = findNext(array, "ORDER", index + 1, 5);
-					int dummy4 = state4 == null? array.length - 1: state4[0];
-					parseHavingPart(BuildString(array, index + 1, dummy4));
-					index = dummy4;
-					state = state4 == null? -1 : state4[1];
-					break;
-			/* case 5 indicates the ORDER BY query 
-			 * Normally, this will be the end of a query.*/
-			case 5: parseOrderByPart(BuildString(array, index + 2, array.length - 1));
-					index = array.length;
+		/* Basically, a left parenthesis may usually indicate there will
+		 * be a logical group operator "UNION" "INTERSECT" "EXCEPT", In
+		 * this case, create two Subselect and use a integer to indicate
+		 * which type of group the query has. */
+		if(array[0].equals("(")) buildUnion(array);
+		else{
+			/* use the automation theory to divide the query. */
+			while(index < array.length) {
+				switch(state){
+				/* case 0 indicates the SELECT query */
+				case 0: int[] state0 = findNext(array, "FROM", index + 1, 1);
+						parseSelectPart(BuildString(array, index + 1, state0[0]));
+						index = state0[0];
+						state = state0[1];
+						break;
+				/* case 1 indicates the FROM query */
+				case 1: String[] target0 = {"WHERE", "GROUP", "", "ORDER"};
+						int[] state1 = findNextInArray(array, target0, index + 1, 2);
+						int dummy1 = state1 == null? array.length : state1[0];
+						parseFromPart(BuildString(array, index + 1, dummy1));
+						index = dummy1;
+						state = state1 == null? -1 : state1[1];
+						break;
+				/* case 2 indicates the WHERE query */
+				case 2: String[] target1 = {"GROUP", "", "ORDER"};
+						int[] state2 = findNextInArray(array, target1, index + 1, 3);
+						int dummy2 = state2 == null? array.length : state2[0];
+						parseWherePart(BuildString(array, index + 1, dummy2));
+						index = dummy2;
+						state = state2 == null? -1 : state2[1];
+						break;
+				/* case 3 indicates the GROUP BY query */
+				case 3: String[] target2 = {"HAVING", "ORDER"};
+						int[] state3 = findNextInArray(array, target2, index + 2, 4);
+						int dummy3 = state3 == null? array.length : state3[0];
+						parseGroupByPart(BuildString(array, index + 2, dummy3));
+						index = dummy3;
+						state = state3 == null? -1 : state3[1];
+						break;
+				/* case 4 indicates the HAVING query */
+				case 4: int[] state4 = findNext(array, "ORDER", index + 1, 5);
+						int dummy4 = state4 == null? array.length : state4[0];
+						parseHavingPart(BuildString(array, index + 1, dummy4));
+						index = dummy4;
+						state = state4 == null? -1 : state4[1];
+						break;
+				/* case 5 indicates the ORDER BY query 
+				 * Normally, this will be the end of a query.*/
+				case 5: parseOrderByPart(BuildString(array, index + 2, array.length));
+						index = array.length;
+				}
 			}
 		}
+	}
+	
+	/**
+	 * This method is used to build the query that has the union language
+	 * inside. First, trace the number of parenthesis to find a index of 
+	 * the union part. Handle the union word by passing an arbitary value
+	 * to the global variable. Create two Plainselect classes that handles
+	 * the two queries being evaluated.
+	 * @param array the array consists of the content of the query.
+	 */
+	private void buildUnion(String[] array) {
+		int numofparenthesis = 1, index = 1;
+		while(numofparenthesis>0) {
+			if(array[index].equals("(")) numofparenthesis++;
+			if(array[index].equals(")")) numofparenthesis--;
+			index++;
+		}
+		/* notice we are not supposed to include the parenthesis! */
+		PlainSelect left = new PlainSelect(BuildString(array, 1, index - 1));
+		if(array[index].equals("UNION")) uniontype = 1;
+		else if(array[index].equals("INTERSECT")) uniontype = 3;
+		else if(array[index].equals("EXCEPT")) uniontype = 5;
+		index++;
+		if(array[index].equals("ALL")){
+			uniontype++;
+			index++;
+		}
+		numofparenthesis = 1;
+		int anchor = ++index;
+		while(numofparenthesis>0) {
+			if(array[index].equals("(")) numofparenthesis++;
+			if(array[index].equals(")")) numofparenthesis--;
+			index++;
+		}
+		PlainSelect right = new PlainSelect(BuildString(array, anchor, index - 1));
+		sub[0] = left;
+		sub[1] = right;
+		/* this indicates there is an order by clause at the end of the query. */
+		if(index!=array.length) 
+			parseOrderByPart(BuildString(array, index + 2, array.length));
 	}
 
 	/**
@@ -207,14 +258,26 @@ public class PlainSelect {
 		String[] reserved = {"COUNT", "AVG", "SUM", "MIN", "MAX"};
 		Set<String> set = new HashSet<>();
 		/* this indicates the select query only contains an "*", simply return. */
-		if(expressionlist[0].equals("*")||
-				(expressionlist.length>1&&expressionlist[1].equals("*"))) 
+		if(expressionlist[0].equals("*")) 
 			return;
-		if(expressionlist[0].equals("DISTINCT")) isDistinct = true;
+		/* same as above except set isDistinct to true. */
+		if(expressionlist[0].equals("DISTINCT *")) {
+			isDistinct = true;
+			return;
+		}
 		for(int i=0;i<reserved.length;i++)
 			set.add(reserved[i]);
-		for(String str : expressionlist) {
+		for(int j=0;j<expressionlist.length;j++) {
+			String str = expressionlist[j];
 			String[] temp = str.trim().split("\\s+");
+			/* get rid of the "DISTINCT" keyword and set isDistinct to true. */
+			if(temp[0].equals("DISTINCT")) {
+				String[] dummy = new String[temp.length-1];
+				for(int i=0;i<dummy.length;i++)
+					dummy[i] = temp[i+1];
+				temp = dummy;
+				isDistinct = true;
+			}
 			/* this will handle the case when an "AS" exists. */
 			if(temp.length > 1 && temp[temp.length-2].equals("AS")){
 				/* left expression is a column name. */
@@ -379,6 +442,7 @@ public class PlainSelect {
 	private void parseOrderByPart(String s) {
 		String[] array = s.split("\\s+");
 		int index = 0;
+		List<Integer> arraylist = new ArrayList<>();
 		/* this for loop extracts the order by elements out without considering
 		 * the "DESC" and "LIMIT". */
 		List<String> list = new ArrayList<>();
@@ -392,20 +456,42 @@ public class PlainSelect {
 				Expression root = cal.parse();
 				orderbylist.add(root);
 				list = new ArrayList<>();
-				if(index<array.length&&array[index].equals(",")) continue;
-				else break;
+				if(index<array.length&&!array[index].equals("LIMIT")) {
+					/* this indicates we do not encounter a "DESC", so we append 1. */
+					if(array[index].equals(",")) {
+						arraylist.add(1);
+						continue;
+					}
+					if(array[index].equals("DESC")) {
+						arraylist.add(-1);
+						if(index==array.length-1||array[index+1].equals("LIMIT")) {
+							index++;
+							break;
+						}
+						/* This case indicates the DESC follows by a ","
+						 * therefore, we need to increment the index by 1. 
+						 * Notice the for loop may increment the index by 1.*/
+						else{
+							index++;
+							continue;
+						}
+					}
+				}
+				else{
+					arraylist.add(1);
+					break;
+				}
 			}
 			else list.add(array[index]);
-		}
-		if(index!=array.length&&array[index].equals("DESC")) {
-			isDescending = true;
-			index++;
 		}
 		if(index!=array.length&&array[index].equals("LIMIT")) {
 			String get1 = array[index+1], get2 = array[index+3];
 			startpoint = Integer.parseInt(get1);
 			endpoint = Integer.parseInt(get2);
 		}
+		desclist = new int[arraylist.size()];
+		for(int i=0;i<desclist.length;i++)
+			desclist[i] = arraylist.get(i);
 	}
 	
 	/**
@@ -473,11 +559,13 @@ public class PlainSelect {
 	}
 
 	/**
-	 * this method returns whether the query is descending or not.
+	 * this method returns whether the query is descending or not. Notice
+	 * when we get the value of 1, that is used to indicate the sorted value
+	 * is ascending, while a value of -1 indicates the value is descending.
 	 * @return the value indicates whether the query is descending.
 	 */
-	public boolean isDesc() {
-		return isDescending;
+	public int[] isDescList() {
+		return desclist;
 	}
 	
 	/**
@@ -512,6 +600,30 @@ public class PlainSelect {
 	 */
 	public boolean equals(PlainSelect plain) {
 		return getQuery().equals(plain.getQuery());
+	}
+	
+	/**
+	 * This method is the getter method of the union type. 
+	 * Here is a table that indicates the value and the actual type.
+	 * TypeValue  UnionType
+	 *     1        UNION
+	 *     2      UNION ALL
+	 *     3      INTERSECT
+	 *     4      INTERSECT ALL
+	 *     5       EXCEPT
+	 *     6      EXCEPT ALL
+	 * @return an integer that indicates the value of the union type.
+	 */
+	public int getUnionType() {
+		return uniontype;
+	}
+	
+	/**
+	 * This is the getter method of the collection of sub queries.
+	 * @return an array of sub queries.
+	 */
+	public PlainSelect[] getSubQueries() {
+		return sub;
 	}
 	
 }

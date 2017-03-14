@@ -102,6 +102,26 @@ public class CheckEquals implements AbstractVisitor {
 		}
 		return true;
 	}
+	
+	/**
+	 * This method is used to check whether two arrays of integers are 
+	 * equal or not. notice we need to check whether they are null
+	 * or not. If not, check whether they have the same elements in the
+	 * same order.
+	 * @param list1 one of the array we check whether they are equal.
+	 * @param list2 one of the array we check whether they are equal.
+	 * @return the boolean value shows whether they are equal.
+	 */
+	public boolean checkEqual(int[] list1, int[] list2) {
+		if(list1==null&&list2==null) return true;
+		if(list1==null||list2==null) return false;
+		if(list1.length!=list2.length) return false;
+		for(int i=0;i<list1.length;i++) {
+			if(list1[i]!=list2[i])
+				return false;
+		}
+		return true;
+	}
 
 	/**
 	 * This method is used to check whether the two maps are equal. 
@@ -147,6 +167,16 @@ public class CheckEquals implements AbstractVisitor {
 			System.out.println(sb);
 			System.out.println();
 		}
+	}
+	
+	/**
+	 * This method is used for debugging. Print a array of integer with
+	 * each element in one line.
+	 * @param list the list that needs to be printed.
+	 */
+	public void printArray(int[] array) {
+		for(int i=0;i<array.length;i++)
+			System.out.println(array[i]);
 	}
 	
 	/**

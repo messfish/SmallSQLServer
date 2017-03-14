@@ -54,7 +54,7 @@ public class StringValue extends Expression{
 	 */
 	@Override
 	public String getString() {
-		return data;
+		return "String: " + data;
 	}
 	
 	/**
@@ -66,7 +66,7 @@ public class StringValue extends Expression{
 	 */
 	@Override
 	public void print(String s, StringBuilder sb) {
-		sb.append(s + "[" + data + "]").append("\n");
+		sb.append(s + "[" + "String: " + data + "]").append("\n");
 	}
 	
 	/**

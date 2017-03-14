@@ -42,12 +42,12 @@ public class LogicalExpressionTest {
 		StringBuilder sb = new StringBuilder();
 		express.print("", sb);
 		/* test whether the tree structure is the same in pre-order from. */
-		assertEquals(sb.toString(), expected);
+		assertEquals(expected, sb.toString());
 		StringBuilder sb2 = new StringBuilder();
 		express.toString(sb2);
 		sb2.deleteCharAt(sb2.length() - 1);
 		/* test whether the tree structure is the same in in-order form. */
-		assertEquals(sb2.toString(), exp);
+		assertEquals(exp, sb2.toString());
 	}
 
 	@Test
@@ -83,12 +83,12 @@ public class LogicalExpressionTest {
 		StringBuilder sb = new StringBuilder();
 		express.print("", sb);
 		/* test whether the tree structure is the same in pre-order form. */
-		assertEquals(sb.toString(), expected);
+		assertEquals(expected, sb.toString());
 		StringBuilder sb2 = new StringBuilder();
 		express.toString(sb2);
 		sb2.deleteCharAt(sb2.length() - 1);
 		/* test whether the string is the same in in-order form. */
-		assertEquals(sb2.toString(), exp);
+		assertEquals(exp, sb2.toString());
 	}
 	
 	@Test
@@ -132,13 +132,36 @@ public class LogicalExpressionTest {
 		StringBuilder sb = new StringBuilder();
 		express.print("", sb);
 		/* test whether the tree structure is the same in pre-order form. */
-		assertEquals(sb.toString(), expected);
+		assertEquals(expected, sb.toString());
 		StringBuilder sb2 = new StringBuilder();
 		express.toString(sb2);
 		sb2.deleteCharAt(sb2.length() - 1);
 		/* test whether the string is the same in in order form. */
-		assertEquals(sb2.toString(), exp);
+		assertEquals(exp, sb2.toString());
 	}
 	
+	/**
+	 * This method tests the case when there is a like query.
+	 */
+	@Test
+    public void test4() {
+    	String exp = "S.A LIKE \"%%d%%\" AND S.B NOT LIKE \"%%%%\"";
+    	LogicalExpressionParser parse = 
+				new LogicalExpressionParser(exp.split("\\s+"));
+		Expression express = parse.parse();
+		String expected = "[AND]" + "\n" +
+					  	  "-[LIKE]" + "\n" +
+					  	  "--[Column: S.A]" + "\n" +
+					  	  "--[String: \"%%d%%\"]" + "\n" +
+					  	  "-[NOT]" + "\n" +
+					  	  "--[LIKE]" + "\n" +
+					  	  "---[Column: S.B]" + "\n" +
+					  	  "---[String: \"%%%%\"]" + "\n";
+		StringBuilder sb = new StringBuilder();
+		express.print("", sb);
+		/* test whether the tree structure is the same in pre-order form. */
+		assertEquals(expected, sb.toString());
+    }
+    
 }
 
