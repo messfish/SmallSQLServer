@@ -20,6 +20,14 @@ public class Mule{
 	}
 	
 	/**
+	 * this is the setter method of the index.
+	 * @param arg the parameters that will be passed to the index.
+	 */
+	public void setIndex(int arg) {
+		index = arg;
+	}
+	
+	/**
 	 * this is the getter method of the datatype.
 	 * @return the data type.
 	 */

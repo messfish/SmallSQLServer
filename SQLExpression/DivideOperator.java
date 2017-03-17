@@ -5,7 +5,7 @@ package SQLExpression;
  * @author messfish
  *
  */
-public class DivideOperator extends BinaryExpression{
+public class DivideOperator extends BinaryExpression {
 
 	/**
 	 * Constructor: this constructor extends from the binary expression

@@ -6,7 +6,7 @@ package SQLExpression;
  * @author messfish
  *
  */
-public class NegativeValue extends UnaryExpression{
+public class NegativeValue extends UnaryExpression {
 
 	/**
 	 * Constructor: this constructor extends from the unary expression

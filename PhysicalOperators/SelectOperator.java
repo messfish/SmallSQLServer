@@ -1,6 +1,5 @@
 package PhysicalOperators;
 
-import java.io.File;
 import java.util.Map;
 
 import Evaluator.Evaluator;
@@ -19,7 +18,7 @@ import TableElement.Tuple;
  */
 public class SelectOperator extends Operator{
 
-	private ScanOperator scan; // object that performs the scanning.
+	private Operator scan; // object that performs the scanning.
 	private Expression express; // object stores the expression.
 	
 	/**
@@ -28,8 +27,8 @@ public class SelectOperator extends Operator{
 	 * @param file the binary file that needs to be scanned.
 	 * @param express the expression that will be passed.
 	 */
-	public SelectOperator(File file, Expression express) {
-		scan = new ScanOperator(file);
+	public SelectOperator(Operator operator, Expression express) {
+		scan = operator;
 		this.express = express;
 	}
 

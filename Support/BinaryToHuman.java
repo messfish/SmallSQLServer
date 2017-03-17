@@ -52,7 +52,7 @@ public class BinaryToHuman {
 				index = writeLine(buffer,list,sb,index);
 			}
 			int[] typelist = new int[list.size()];
-			for(int i=0;i<typelist.length;i++)
+			for(int i=0;i<typelist.length;i++) 
 				typelist[i] = list.get(i);
 			readPage(fc, sb, typelist);
 			BufferedWriter write = new BufferedWriter(new FileWriter(result));
@@ -91,7 +91,7 @@ public class BinaryToHuman {
 				buffer = ByteBuffer.allocate(NUM_OF_BYTES);
 			}
 		}catch(Exception e) {
-			System.out.println("There is something wrong at the file channel!");
+			e.printStackTrace();
 		}
 	}
 	
@@ -111,7 +111,11 @@ public class BinaryToHuman {
 		for(int i=0;i<typelist.length;i++) {
 			/* this indicates the number is the order of individual table.
 			 * In this case, we need to skip this number. */
-			if(typelist[i]==-1) index += 4;
+			if(typelist[i]==-1) {
+				long tupleID = buffer.getLong(index);
+				sb.append(tupleID).append(" ");
+				index += 8;
+			}
 			else if(typelist[i]==1) {
 				long data = buffer.getLong(index);
 				String temp = String.valueOf(data);
@@ -123,7 +127,7 @@ public class BinaryToHuman {
 				index++;
 				StringBuilder temp = new StringBuilder();
 				for(int j=0;j<length;j++) {
-					char c = buffer.getChar(index);
+					char c = (char)buffer.get(index);
 					temp.append(c);
 					index++;
 				}
@@ -164,30 +168,19 @@ public class BinaryToHuman {
 	 */
 	private int writeLine(ByteBuffer buffer, List<Integer> list, 
 					      StringBuilder sb, int index) {
-		int size = buffer.get(index);
-		index++;
-		StringBuilder build = new StringBuilder();
-		int length = buffer.get(index);
-		index++;
-		for(int j=0;j<length;j++) {
-			char c = (char) buffer.get(index);
-			System.out.println(c);
-			build.append(c);
-			index++;
-		}
-		sb.append(build).append(" ");
-		for(int j=0;j<size;j++) {
+		/* if we get an 0, it indicates we reaches the end of the list. */
+		while(buffer.get(index)!=0) {
 			StringBuilder sb1 = new StringBuilder();
 			int length1 = buffer.get(index);
 			index++;
 			for(int k=0;k<length1;k++) {
 				char c = (char) buffer.get(index);
-				System.out.println(c);
 				sb1.append(c);
 				index++;
 			}
 			sb.append(sb1).append(" ");
 			int type = buffer.get(index);
+			sb.append(type).append(" ");
 			list.add(type);
 			index++;
 		}

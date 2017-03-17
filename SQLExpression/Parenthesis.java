@@ -5,7 +5,7 @@ package SQLExpression;
  * @author messfish
  *
  */
-public class Parenthesis extends UnaryExpression{
+public class Parenthesis extends UnaryExpression {
 
 	/**
 	 * Constructor: this constructor extends from the unary expression

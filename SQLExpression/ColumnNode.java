@@ -7,7 +7,7 @@ package SQLExpression;
  * @author messfish
  *
  */
-public class ColumnNode extends Expression{
+public class ColumnNode extends Expression {
 
 	private String data;
 	

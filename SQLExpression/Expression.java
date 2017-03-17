@@ -51,4 +51,17 @@ public abstract class Expression {
 		visitor.visit(this);
 	}
 	
+	/**
+	 * This method is used to return whether the expression is a leaf.
+	 * By default, it will return a true value. For the second level
+	 * class who extends from it. They will return false. That is 
+	 * because all the classes extends from this class are leaf nodes.
+	 * While all the classes extends from the second level class
+	 * are not leaf nodes.
+	 * @return a boolean value shows whether this is a leaf node.
+	 */
+	public boolean isLeaf() {
+		return true;
+	}
+	
 }

@@ -5,7 +5,7 @@ package SQLExpression;
  * @author messfish
  *
  */
-public class DoubleValue extends Expression{
+public class DoubleValue extends Expression {
 
 	private double data;
 	

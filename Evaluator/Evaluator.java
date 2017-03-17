@@ -37,6 +37,7 @@ import SQLExpression.TimeValue;
 import TableElement.DataType;
 import TableElement.Tuple;
 import Support.Mule;
+import Support.TimeConversion;
 
 /**
  * This class is used to evaluate whether the tuple in the constructor
@@ -53,6 +54,9 @@ public class Evaluator implements ExpressionVisitor {
 	private Map<String, Mule> schema;
 	private Stack<DataType> stack1;
 	private Stack<Boolean> stack2;
+	private boolean noDouble; 
+	// the variable checks whether there is a double value in the expression.
+	TimeConversion convert = new TimeConversion();
 	
 	/**
 	 * Constructor: this constructor is used to pass the tuple and
@@ -70,6 +74,22 @@ public class Evaluator implements ExpressionVisitor {
 	}
 	
 	/**
+	 * Constructor: this constructor is used to pass the tuple and
+	 * the expression to their global variable. Notice this is mainly
+	 * used by the Operators who do not need to perform an evaluation.
+	 * @param schema the schema that the table possess.
+	 */
+	public Evaluator(Map<String, Mule> schema) {
+		/* this fake tuple is used for traversing through the expression
+		 * tree since the column node will need to extract data. */
+		tuple = new Tuple(schema.size(), 1);
+		this.schema = schema;
+		stack1 = new Stack<>();
+		stack2 = new Stack<>();
+		noDouble = true;
+	}
+	
+	/**
 	 * This method checks whether the tuple is a valid one. Post traverse the 
 	 * expression tree and manipulate the two stacks. After the traverse,
 	 * there could be one boolean value left on the stack. That value indicates
@@ -78,7 +98,35 @@ public class Evaluator implements ExpressionVisitor {
 	 */
 	public boolean checkValid() {
 		express.accept(this);
+		/* this could only happen when the expression is empty. In this case,
+		 * simply return a true value. */
+		if(stack2.isEmpty())
+			return true;
 		return stack2.pop();
+	}
+	
+	/**
+	 * This method is used to get the data after the calculation. Post traverse
+	 * the expression tree and manipulate the first stack only. After the 
+	 * traverse, there could be one boolean value left on the stack. That value
+	 * indicates the result of the data. Return that data from the stack.
+	 * @return the result of the calculation from expression.
+	 */
+	public DataType getData() {
+		express.accept(this);
+		return stack1.pop();
+	}
+	
+	/**
+	 * this method returns a value evaluates the statement " there are no
+	 * double value type in the expression tree". Traverse the tree and 
+	 * return the modified(if it is) noDouble.
+	 * @param express the expression tree that will be checked.
+	 * @return a value indicates whether a double value type exists.
+	 */
+	public boolean noDouble(Expression express) {
+		express.accept(this);
+		return noDouble;
 	}
 	
 	/**
@@ -495,10 +543,12 @@ public class Evaluator implements ExpressionVisitor {
 	/**
 	 * This method is used to deal with the double value in the expression.
 	 * store that value into a data type and push that into stack1.
+	 * Also, change the noDouble variable to false;
 	 * @param value the double value in an expression.
 	 */
 	@Override
 	public void visit(DoubleValue value) {
+		noDouble = false;
 		stack1.push(new DataType(value.getData()));
 	}
 
@@ -515,7 +565,8 @@ public class Evaluator implements ExpressionVisitor {
 	/**
 	 * This method is used to deal with the column node in the expression.
 	 * check the index of that column from the schema hash map. fetch the
-	 * data type by using the index and store that into stack1.
+	 * data type by using the index and store that into stack1. Also, if 
+	 * the type of the data is double, set noDouble to false.
 	 * @param value the column node that will be visited.
 	 */
 	@Override
@@ -523,6 +574,8 @@ public class Evaluator implements ExpressionVisitor {
 		String attribute = node.getWholeColumnName();
 		Mule mule = schema.get(attribute);
 		DataType data = tuple.getData(mule.getIndex());
+		if(mule.getDataType()==5)
+			noDouble = false;
 		stack1.push(data);
 	}
 
@@ -541,19 +594,38 @@ public class Evaluator implements ExpressionVisitor {
 		
 	}
 
+	/**
+	 * This method is used to deal with the long value in the expression.
+	 * store that value into a data type and push that into stack1.
+	 * @param value the long value in an expression.
+	 */
 	@Override
 	public void visit(LongValue value) {
-		
+		stack1.push(new DataType(value.getData()));
 	}
 
+	/**
+	 * This method is used to deal with the date value in the expression.
+	 * convert the date value type into a double value and
+	 * store that value into a data type and push that into stack1.
+	 * @param value the date value in an expression.
+	 */
 	@Override
 	public void visit(DateValue value) {
-		
+		double data = convert.fromDateToNumber(value.getData());
+		stack1.push(new DataType(data));
 	}
 
+	/**
+	 * This method is used to deal with the time value in the expression.
+	 * convert the time value type into a double value and
+	 * store that value into a data type and push that into stack1.
+	 * @param value the time value in an expression.
+	 */
 	@Override
 	public void visit(TimeValue value) {
-		
+		double data = convert.fromTimeToNumber(value.getData());
+		stack1.push(new DataType(data));
 	}
 
 }

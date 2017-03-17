@@ -10,6 +10,7 @@ import SmallSQLServer.Main;
 import Support.BinaryToHuman;
 import Support.HumanToBinary;
 import Support.RandomTable;
+import Support.checkFile;
 
 /**
  * Like the name suggests, this class is mainly used for
@@ -25,11 +26,16 @@ public class ConversionTest {
 		Main.setTest("/Users/messfish/Desktop/SQLdatabase/test/");
 		Main.setInput("/Users/messfish/Desktop/SQLdatabase/input/");
 		RandomTable random = new RandomTable(10000);
-		File file = random.generate(1);
-		HumanToBinary human = new HumanToBinary();
-		File temp = human.convert(file, "Test");
-		BinaryToHuman binary = new BinaryToHuman();
-		File result = binary.convert(temp, "Test"); 
+		/* check it multiple times to guarantee our code works. */
+		for(int i = 0; i < 1000 ; i++) {
+			File file = random.generate(1);
+			HumanToBinary human = new HumanToBinary();
+			File temp = human.convert(file, "Test");
+			BinaryToHuman binary = new BinaryToHuman();
+			File result = binary.convert(temp, "Test"); 
+			checkFile check = new checkFile();
+			assertTrue(check.checkHumanEqual(file, result));
+		}
 	}
 
 }

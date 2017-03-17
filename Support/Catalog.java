@@ -27,7 +27,6 @@ public class Catalog {
 	// this is the location of the data directory.
 	private static final String schema = "/db/schema.txt";
 	// this is the location of the schema file.
-	private static Catalog instance = new Catalog(); // The object of type catalog.
 	private Map<String, Map<String, Mule>> table_schema;
 	// this variable uses the table name as the key and stores 
 	// the schema in the map as the value.
@@ -45,7 +44,7 @@ public class Catalog {
 	 * I mark it private for security reasons. And use a public 
 	 * function to retrieve the object for this class.
 	 */
-	private Catalog() {
+	public Catalog() {
 		table_schema = new HashMap<>();
 		file_map = new HashMap<>();
 		attributes_map = new HashMap<>();
@@ -85,14 +84,6 @@ public class Catalog {
 	public String getFileLocation(String s) {
 		if(!file_map.containsKey(s)) return null;
 		return file_map.get(s);
-	}
-	
-	/**
-	 * This method returns an object of type Catalog.
-	 * @return the Catalog object instance.
-	 */
-	public static Catalog getInstance() {
-		return instance;
 	}
 	
 	/**

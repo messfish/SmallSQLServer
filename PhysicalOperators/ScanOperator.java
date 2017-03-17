@@ -39,6 +39,7 @@ public class ScanOperator extends Operator {
 	private int index; // this integer stores the point in the page.
 	private List<Integer> typelist;
 	// this integer stores the index of each attributes in the table.
+	private Tuple current; // this variable stores the current tuple.
 	
 	/**
 	 * Constructor: this constructor consumes a file and stores 
@@ -95,6 +96,7 @@ public class ScanOperator extends Operator {
 	 */
 	@Override
 	public Tuple getNextTuple() {
+		/* this indicates we need to fetch a new page from the disk. */
 		if(currentpoint==pagelimit) {
 			buffer = readPage();
 			if(buffer==null) return null;
@@ -104,13 +106,15 @@ public class ScanOperator extends Operator {
 		}
 		/* this byte indicates whether the tuple is valid, skip it. */
 		index++;
-		Tuple result = new Tuple(schema.size());
-		int point = 0;
+		Tuple result = new Tuple(schema.size(), numoftables);
+		int point = 0, IDpoint = 0;
 		for(int i=0;i<typelist.size();i++) {
 			int dummy = typelist.get(i);
 			/* this means this is the order of the sub tuple. */
 			if(dummy==-1){
-				index += 4;
+				result.setTupleID(IDpoint, buffer.getLong(index));
+				IDpoint++;
+				index += 8;
 				point--;
 			}
 			/* this means this is a long integer value. */
@@ -142,6 +146,7 @@ public class ScanOperator extends Operator {
 			point++; // do not forget to increment the index of the tuple array!
 		}
 		currentpoint++;
+		current = result;
 		return result;
 	}
 
@@ -150,6 +155,7 @@ public class ScanOperator extends Operator {
 	 */
 	@Override
 	public void reset() {
+		current = null;
 		try {
 			output = new FileOutputStream(file);
 			fc = output.getChannel();
@@ -159,6 +165,11 @@ public class ScanOperator extends Operator {
 		}
 	}
 
+	/**
+	 * This method is used to retrieve the schema from the table.
+	 * @return a hash map with the attribute as the key and a combination
+	 * of the index and the data type as the value.
+	 */
 	@Override
 	public Map<String, Mule> getSchema() {
 		return schema;
@@ -180,5 +191,24 @@ public class ScanOperator extends Operator {
 		if(length==-1) return null;
 		return buffer;
 	}
+	
+	/**
+	 * This method is used to get the current tuple.
+	 * @return the current tuple.
+	 */
+	public Tuple getCurrentTuple() {
+		return current;
+	}
 
+	/**
+	 * This method is used to close the file out put stream.
+	 */
+	public void close() {
+		try {
+			output.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 }

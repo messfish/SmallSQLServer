@@ -11,7 +11,7 @@ import Support.Catalog;
  */
 public class ReadGrammar {
 
-	private Catalog catalog = Catalog.getInstance();
+	private Catalog catalog = new Catalog();
 	
 	/**
 	 * This method checks whether there is a grammar error in the query.

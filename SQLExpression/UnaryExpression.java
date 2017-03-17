@@ -37,4 +37,15 @@ public abstract class UnaryExpression extends Expression {
 		visitor.visit(this);
 	}
 	
+	/**
+	 * This method returns whether the node is a leaf node. At this time,
+	 * we return false because all the expression class extends this class
+	 * are not leaf nodes.
+	 * @return a value shows whether this expression is a leaf node or not.
+	 */
+	@Override
+	public boolean isLeaf() {
+		return false;
+	}
+	
 }

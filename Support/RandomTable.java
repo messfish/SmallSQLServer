@@ -37,10 +37,12 @@ public class RandomTable {
 		int size = 0;
 		try {
 			StringBuilder sb = new StringBuilder();
-			sb.append("Test ").append("Ta ").append("Tb ")
-			  .append("Tc ").append("Td ").append("\n");
+			sb.append("Test.Ta ").append("1 ").append("Test.Tb ")
+			  .append("5 ").append("Test.Tc ").append("3 ")
+			  .append("Test.Td ").append("4 ").append("\n");
 			BufferedWriter write = new BufferedWriter(new FileWriter(result));
 			while(size<limit) {
+				sb.append(size + 1).append(" ");
 				long data = (long)(Math.random()*1000000);
 				String str = String.valueOf(data);
 				sb.append(str.length()).append("/").append(str + " ");

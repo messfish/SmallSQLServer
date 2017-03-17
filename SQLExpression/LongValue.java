@@ -5,7 +5,7 @@ package SQLExpression;
  * @author messfish
  *
  */
-public class LongValue extends Expression{
+public class LongValue extends Expression {
 
 	private long data;
 	
