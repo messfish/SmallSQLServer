@@ -22,4 +22,6 @@ public interface OperatorVisitor {
 	
 	void visit(SelectOperators select);
 	
+	void visit(CartesianOperators cart);
+	
 }

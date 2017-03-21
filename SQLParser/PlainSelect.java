@@ -347,7 +347,7 @@ public class PlainSelect {
 					 * the alias command "AS", a right parenthesis. */
 					String subselect = BuildString(array, 1, array.length - 3);
 					PlainSelect subplain = new PlainSelect(subselect);
-					table = new Table(subplain);
+					table = new Table(array[array.length - 1], subplain);
 				}
 				/* this is the case when an alias exist or only the 
 				 * original table name presents. Since they share the 

@@ -1,20 +1,11 @@
 package LogicalOperators;
 
 /**
- * this class is the logical version of the having operators.
+ * This class is the logical version of the Cartesian operators.
  * @author messfish
  *
  */
-public class HavingOperators extends UnaryOperators{
-
-	/**
-	 * Constructor: this constructor extends the logic
-	 * from its parent.
-	 * @param child the children of this logical operator.
-	 */
-	public HavingOperators(Operators child) {
-		super(child);
-	}
+public class CartesianOperators extends Operators {
 
 	/**
 	 * this method just calls the visit method for the class
@@ -34,8 +25,7 @@ public class HavingOperators extends UnaryOperators{
 	 */
 	@Override
 	public void print(String s, StringBuilder sb) {
-		sb.append(s).append("Having:").append("\n");
-		getChild().print(s+"-", sb);
+		sb.append(s).append("Cartesian:").append("\n");
 	}
 	
 }

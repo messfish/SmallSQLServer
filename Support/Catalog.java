@@ -54,7 +54,7 @@ public class Catalog {
 			String s = null;
 			while((s = buff.readLine())!=null) {
 				String[] str = s.split("\\s+");
-				file_map.put(str[0], Main.getInput() + base + str[0]);
+				file_map.put(str[0], Main.getInput() + base + str[0] + ".b");
 				/* the map stores the name of the table as the key and
 				 * a uniformed structure as the value. */
 				Map<String, Mule> schema = new HashMap<>();

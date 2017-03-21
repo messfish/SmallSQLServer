@@ -75,21 +75,23 @@ public class ProjectOperator extends Operator {
 	@Override
 	public Tuple getNextTuple() {
 		Tuple tuple = operator.getNextTuple();
+		if(tuple == null) 
+			return null;
 		/* this indicates there is only an "*" in the SELECT query. */
 		if(list.size()==0) {
 			tuple.resetTupleID(tupleID);
 			tupleID++;
 			return tuple;
 		}
-		tuple = new Tuple(list.size(), 1);
-		tuple.setTupleID(0, tupleID);
+		Tuple result = new Tuple(list.size(), 1);
+		result.setTupleID(0, tupleID);
 		for(int i=0;i<list.size();i++) {
 			Evaluator eva=new Evaluator(tuple,list.get(i),operator.getSchema());
 			DataType data = eva.getData();
-			tuple.setData(i, data);
+			result.setData(i, data);
 		}
 		tupleID++;
-		return tuple;
+		return result;
 	}
 
 	/**

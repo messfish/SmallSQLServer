@@ -30,17 +30,24 @@ public class CartesianOperator extends Operator {
 	public CartesianOperator(Map<String, Table> map, Catalog catalog) {
 		scanlist = new ScanOperator[map.size()];
 		schema = new HashMap<>();
+		
 		int index = 0;
+		String[] aliasarray = new String[map.size()];
 		for(Map.Entry<String, Table> entry : map.entrySet()) {
 			String locate = entry.getKey();
-			File scanfile = new File(catalog.getFileLocation(locate));
+			String tablename = entry.getValue().getName();
+			File scanfile = new File(catalog.getFileLocation(tablename));
+			aliasarray[index] = locate;
 			scanlist[index++] = new ScanOperator(scanfile);
 			size += scanlist[index-1].getSchema().size();
 		}
 		for(int i=0;i<scanlist.length;i++) {
 			Map<String, Mule> schema = scanlist[i].getSchema();
-			for(Map.Entry<String, Mule> entry : schema.entrySet()) 
-				this.schema.put(entry.getKey(), entry.getValue());
+			for(Map.Entry<String, Mule> entry : schema.entrySet()) {
+				String part = entry.getKey().split("\\.")[1];
+				String combination = aliasarray[i] + "." + part;
+				this.schema.put(combination, entry.getValue());
+			}
 		}
 	}
 	
@@ -102,7 +109,7 @@ public class CartesianOperator extends Operator {
 	 */
 	private boolean pipeline(int index, int start, Tuple result) {
 		/* this means we reach the end, simply return a false value. */
-		if(index==size) return false;
+		if(index==scanlist.length) return false;
 		/* we return a false value to notify the former one that it 
 		 * needs to get the next tuple. */
 		if(!pipeline(index + 1, 

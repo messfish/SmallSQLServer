@@ -29,7 +29,8 @@ public class ProjectOperators extends UnaryOperators{
 	 */
 	@Override
 	public void print(String s, StringBuilder sb) {
-		
+		sb.append(s).append("Project:").append("\n");
+		getChild().print(s+"-", sb);
 	}
 	
 }

@@ -34,7 +34,8 @@ public class DistinctOperators extends UnaryOperators{
 	 */
 	@Override
 	public void print(String s, StringBuilder sb) {
-		
+		sb.append(s).append("Distinct:").append("\n");
+		getChild().print(s+"-", sb);
 	}
 	
 }

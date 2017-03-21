@@ -2,8 +2,8 @@ package PhysicalOperators;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ import TableElement.Tuple;
 public class ScanOperator extends Operator {
 
 	private File file;
-	private FileOutputStream output;
+	private RandomAccessFile output;
 	private FileChannel fc;
 	private ByteBuffer buffer;
 	private static final int NUM_OF_BYTES = 16384;
@@ -53,13 +53,13 @@ public class ScanOperator extends Operator {
 		typelist = new ArrayList<>();
 		String temp = "";
 		try {
-			output = new FileOutputStream(this.file);
+			output = new RandomAccessFile(file, "r");
 			fc = output.getChannel();
 			buffer = readPage();
 			/* Notice the format of the head file: the first byte is
 			 * the number of tables in it. Followed by the name of the
 			 * attributes and the type of that attribute. */
-			numoftables = buffer.get();
+			numoftables = buffer.get(0);
 			int index = 1, point = 0;
 			/* the length of the name could not be 0, so when we encounter
 			 * this, usually means we reach the end of the table list. */
@@ -72,7 +72,7 @@ public class ScanOperator extends Operator {
 					sb.append(c);
 					index++;
 				}
-				String get = sb.toString().split(".")[0];
+				String get = sb.toString().split("\\.")[0];
 				if(!temp.equals(get)) {
 					typelist.add(-1);
 					temp = get;
@@ -100,7 +100,7 @@ public class ScanOperator extends Operator {
 		if(currentpoint==pagelimit) {
 			buffer = readPage();
 			if(buffer==null) return null;
-			pagelimit = buffer.getInt();
+			pagelimit = buffer.getInt(0);
 			currentpoint = 0;
 			index = 4;
 		}
@@ -157,7 +157,7 @@ public class ScanOperator extends Operator {
 	public void reset() {
 		current = null;
 		try {
-			output = new FileOutputStream(file);
+			output = new RandomAccessFile(file, "r");
 			fc = output.getChannel();
 			buffer = readPage();
 		} catch (Exception e) {

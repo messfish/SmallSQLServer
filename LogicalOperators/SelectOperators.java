@@ -5,7 +5,16 @@ package LogicalOperators;
  * @author messfish
  *
  */
-public class SelectOperators extends Operators{
+public class SelectOperators extends UnaryOperators{
+
+	/**
+	 * Constructor: this constructor extends the logic
+	 * from its parent.
+	 * @param child the children of this logical operator.
+	 */
+	public SelectOperators(Operators child) {
+		super(child);
+	}
 
 	/**
 	 * this method just calls the visit method for the class
@@ -25,7 +34,8 @@ public class SelectOperators extends Operators{
 	 */
 	@Override
 	public void print(String s, StringBuilder sb) {
-		
+		sb.append(s).append("Select:").append("\n");
+		getChild().print(s+"-", sb);
 	}
 	
 }

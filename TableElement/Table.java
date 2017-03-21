@@ -15,14 +15,18 @@ public class Table {
 	// this variable stores the table which is a select query.
 	private String atom;
 	// this variable stores the table which is a table name.
+	private String name;
+	// this variable stores the name of the table.
 	
 	/**
 	 * Constructor: this constructor handles the table which
 	 * is a select query. 
+	 * @param name the name of the select query.
 	 * @param select a table as a select query
 	 */
-	public Table(PlainSelect select) {
+	public Table(String name, PlainSelect select) {
 		this.select = select;
+		this.name = name;
 	}
 	
 	/**
@@ -32,6 +36,15 @@ public class Table {
 	 */
 	public Table(String atom) {
 		this.atom = atom;
+		name = atom;
+	}
+	
+	/**
+	 * this is the getter method of the name of the table.
+	 * @return the name of the table.
+	 */
+	public String getName() {
+		return name;
 	}
 	
 	/**
@@ -48,7 +61,7 @@ public class Table {
 		}
 		if(that.select!=null) {
 			if(select==null) return false;
-			else return select.equals(that.select);
+			else return select.equals(that.select) && name.equals(that.name);
 		}
 		return false;
 	}

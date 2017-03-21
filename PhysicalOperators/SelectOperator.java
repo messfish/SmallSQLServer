@@ -42,11 +42,13 @@ public class SelectOperator extends Operator{
 	@Override
 	public Tuple getNextTuple() {
 		Tuple tuple = scan.getNextTuple();
+		if(tuple == null) return null;
 		/* this usually indicates no where language. return that tuple. */
 		if(express==null) return tuple;
 		Evaluator eva = new Evaluator(tuple, express, getSchema());
 		while(!eva.checkValid()) {
 			tuple = scan.getNextTuple();
+			if(tuple == null) return null;
 			eva = new Evaluator(tuple,express,getSchema());
 		}
 		return tuple;

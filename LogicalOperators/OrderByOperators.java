@@ -34,7 +34,8 @@ public class OrderByOperators extends UnaryOperators {
 	 */
 	@Override
 	public void print(String s, StringBuilder sb) {
-		
+		sb.append(s).append("Order by:").append("\n");
+		getChild().print(s+"-", sb);
 	}
 
 }

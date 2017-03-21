@@ -100,4 +100,40 @@ public class DataType {
 		return type;
 	}
 	
+	/**
+	 * this method is used to compare the two data types. note we 
+	 * return -1 when this data type is smaller than that one. 1
+	 * means this data type is larger than that one. 0 means these 
+	 * two data types are literally equal.
+	 * @param that another data type that needs to be compared.
+	 * @return the integer indicates the relative greatness of the data type.
+	 */
+	public int compare(DataType that) throws IllegalArgumentException {
+		if(this.type != that.type)
+			throw new IllegalArgumentException
+						("These two data types are not the same type!");
+		if(this.type==1) {
+			if(this.longdata < that.longdata) return -1;
+			else if(this.longdata > that.longdata) return 1;
+		}else if(this.type==5) {
+			if(this.doubledata < that.doubledata) return -1;
+			else if(this.doubledata > that.doubledata) return 1;
+		}else if(this.type==2) 
+			return this.stringdata.compareTo(that.stringdata);
+		return 0;
+	}
+	
+	/**
+	 * This method is mainly for debugging: it will prints the data 
+	 * as long as the data is not null.
+	 */
+	public void print() {
+		if(type == 1) 
+			System.out.println(longdata);
+		if(type == 2)
+			System.out.println(stringdata);
+		if(type == 5)
+			System.out.println(doubledata);
+	}
+	
 }

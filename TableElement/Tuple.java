@@ -74,4 +74,21 @@ public class Tuple {
 		tupleIDlist[0] = tupleID;
 	}
 	
+	/**
+	 * This method is used to check whether two tuples are equal.
+	 * @param that the tuple that is used for checking equality.
+	 * @return the boolean value shows whether they are equal or not.
+	 */
+	public boolean isEqual(Tuple that) {
+		if(this.datalist.length!=that.datalist.length)
+			return false;
+		for(int i=0;i<this.datasize();i++) {
+			DataType data1 = this.getData(i);
+			DataType data2 = that.getData(i);
+			if(data1.compare(data2)!=0) 
+				return false;
+		}
+		return true;
+	}
+	
 }

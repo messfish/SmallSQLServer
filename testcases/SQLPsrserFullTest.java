@@ -280,7 +280,7 @@ public class SQLPsrserFullTest {
 				   + "FROM Sailors AS S , Boats "
 				   + "WHERE Boats.E = S.C";
 		Map<String, Table> tablemap = new HashMap<>();
-		tablemap.put("Mule", new Table(new PlainSelect(sub)));
+		tablemap.put("Mule", new Table("Mule", new PlainSelect(sub)));
 		tablemap.put("R", new Table("Reserves"));
 		assertTrue(check.checkEqual(plain.getFromList(), tablemap));
 		assertTrue(check.checkEqual(plain.getWhereExpression(), null));
