@@ -23,7 +23,6 @@ import TableElement.Tuple;
 public class TempOperator extends Operator {
 
 	private Map<String, Mule> schema;
-	private int numoftables = 0;
 	private FileInputStream in; // note for reading, we need to use this!
 	private FileChannel fc;
 	private ByteBuffer buffer;
@@ -38,10 +37,9 @@ public class TempOperator extends Operator {
 	 * @param file the file that will be used for extracting information.
 	 * @param op the operator that will provide the schema.
 	 */
-	public TempOperator(File file, Operator op) {
+	public TempOperator(File file, Map<String, Mule> schema) {
 		this.file = file;
-		schema = op.getSchema();
-		numoftables = op.getNumOfTables();
+		this.schema = schema;
 		datatypearray = new int[schema.size()];
 		for(Map.Entry<String, Mule> entry : schema.entrySet()) {
 			Mule mule = entry.getValue();
@@ -136,7 +134,7 @@ public class TempOperator extends Operator {
 	 */
 	@Override
 	public int getNumOfTables() {
-		return numoftables;
+		return 1;
 	}
 	
 	/**

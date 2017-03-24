@@ -1,7 +1,6 @@
 package Sorting;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -28,14 +27,15 @@ import TableElement.Tuple;
  */
 public class ExternalSort {
 
-	private static final int NUM_OF_BUFFER = 100;
+	private static final int NUM_OF_BUFFER = 10;
 	private static final int NUM_OF_BYTES = 16384;
 	private int file_index = 1;
-	private Tuple start = null;
 	private Map<String, Mule> schema;
 	private List<Expression> attributeslist;
 	private File result; // this will be used to store the result.
 	private Operator op;
+	private Tuple first; // this is used to store the previous tuple 
+	// that could not be stored in the buffer page.
 	
 	/**
 	 * Constructor: this constructor is used to fetch all the tuples
@@ -56,8 +56,9 @@ public class ExternalSort {
 		schema = op.getSchema();
 		this.attributeslist = attributeslist;
 		/* At first, we build the base of the sorting file. */
-		File file = null;
+		File file = null, previous = null;
 		while(true) {
+			previous = file;
 			file = writeBase(op, ID);
 			if(file == null)
 				break;
@@ -68,10 +69,20 @@ public class ExternalSort {
 		/* this indicates all the tuples are sorted during the first step,
 		 * so we simply assign the file to the result file. */
 		if(file_index == 2) {
-			result = file;
+			result = previous;
 		}else if(file_index > 2) {
 			merge(ID);
+			file_index--;
+			result = new File(Main.getTemp() + ID + " " + file_index);
 		}
+	}
+	
+	/**
+	 * This is the getter method of the schema.
+	 * @return the schema of the external sort class.
+	 */
+	public Map<String, Mule> getSchema() {
+		return schema;
 	}
 	
 	/**
@@ -91,14 +102,16 @@ public class ExternalSort {
 	 */
 	private File writeBase(Operator op, int ID) {
 		List<Tuple> list = new ArrayList<>();
-		if(start != null)
-			list.add(start);
 		Tuple tuple = null;
-		for(int i=0;i<NUM_OF_BUFFER;i++)
+		for(int i=0;i<NUM_OF_BUFFER;i++) {
 			tuple = storePage(op, tuple, list);
+			if(tuple == null)
+				break;
+		}
 		/* this indicates no more tuples left, simply return null. */
-		if(tuple == null) return null;
-		else start = tuple;
+		if(list.size()==0) return null;
+		else if(tuple != null)
+			list.add(tuple);
 		Collections.sort(list, new Comparator<Tuple>(){
 			@Override
 			public int compare(Tuple t1, Tuple t2) {
@@ -106,7 +119,6 @@ public class ExternalSort {
 			}
 		});
 		File file = new File(Main.getTemp() + ID + " " + file_index);
-		file_index++;
 		try{
 			FileOutputStream output = new FileOutputStream(file);
 			FileChannel fc = output.getChannel();
@@ -118,7 +130,6 @@ public class ExternalSort {
 				buffer.position(0);
 				fc.write(buffer);
 			}
-			fc.write(buffer);
 			output.close();
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -186,7 +197,7 @@ public class ExternalSort {
 	 * than t2, -1 means t1 is smaller than t2. 0 means they are equally
 	 * the same.
 	 */
-	private int comparison(Tuple t1, Tuple t2) {
+	int comparison(Tuple t1, Tuple t2) {
 		for(int i=0;i<attributeslist.size();i++) {
 			Expression exp = attributeslist.get(i);
 			Evaluator eva1 = new Evaluator(t1, exp, schema);
@@ -209,9 +220,9 @@ public class ExternalSort {
 	 * This method is used for writing the tuples as bytes in the byte
 	 * buffer. We start the tuple from the starting point and moves on
 	 * until there is not enough room for the tuple at the current index.
-	 * @param list the list of Tuples in the 
-	 * @param start
-	 * @return
+	 * @param list the list of Tuples 
+	 * @param start the starting point of the list
+	 * @return a byte buffer that stores the data.
 	 */
 	private ByteBuffer writePage(List<Tuple> list, int start) {
 		if(list.size()==start)
@@ -220,29 +231,11 @@ public class ExternalSort {
 		int temp = start, index = 4;
 		while(start<list.size()) {
 			Tuple tuple = list.get(start);
-			index += checkSize(tuple);
-			if(index > NUM_OF_BYTES) 
+			int length = checkSize(tuple);
+			if(index + length > NUM_OF_BYTES) 
 				break;
-			for(int i=0;i<tuple.datasize();i++) {
-				DataType data = tuple.getData(i);
-				if(data.getType()==1) {
-					long number = data.getLong();
-					buffer.putLong(index, number);
-					index += 8;
-				}else if(data.getType()==2) {
-					String s = data.getString();
-					buffer.put(index, (byte)s.length());
-					index++;
-					for(char c : s.toCharArray()) {
-						buffer.put(index, (byte)c);
-						index++;
-					}
-				}else if(data.getType()==5) {
-					double number = data.getDouble();
-					buffer.putDouble(index, number);
-					index += 8;
-				}
-			}
+			writeTuple(buffer, tuple, index);
+			index += length;
 			start++;
 		}
 		buffer.putInt(0, start - temp);
@@ -266,11 +259,11 @@ public class ExternalSort {
 				TempOperator[] temparray = new TempOperator[NUM_OF_BUFFER-1];
 				int numofoperators = 0;
 				for(;numofoperators<NUM_OF_BUFFER - 1&&current<limit;
-						numofoperators++) {
+						numofoperators++,current++) {
 					String filelocation = Main.getTemp() + ID + " " + current;
 					File file = new File(filelocation);
-					temparray[numofoperators] = new TempOperator(file, op);
-					current++;
+					temparray[numofoperators] = 
+							new TempOperator(file, op.getSchema());
 				}
 				PriorityQueue<HeapData> pq = new PriorityQueue<>
 						((a,b)->comparison(a.getTuple(),b.getTuple()));
@@ -294,10 +287,82 @@ public class ExternalSort {
 		try {
 			FileOutputStream out = new FileOutputStream(file);
 			FileChannel fc = out.getChannel();
+			while(!pq.isEmpty()) {
+				ByteBuffer buffer = writePage(pq, temparray);
+				buffer.limit(buffer.capacity());
+				buffer.position(0);
+				fc.write(buffer);
+			}
+			first = null;
 			out.close();
-			List<Tuple> temp = new ArrayList<>();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * This method is used to extract the tuple from the priority 
+	 * queue and store the result into the byte buffer.
+	 * @param pq the priority queue used to extract the smallest tuple out.
+	 * @param temparray the array of operators that stores tuple.
+	 * @return the byte buffer that stores the data.
+	 */
+	private ByteBuffer writePage(PriorityQueue<HeapData> pq,
+						TempOperator[] temparray) {
+		ByteBuffer buffer = ByteBuffer.allocate(NUM_OF_BYTES);
+		int index = 4, times = 0;
+		if(first!=null) {
+			writeTuple(buffer, first, index);
+			index += checkSize(first);
+			times++;
+		}
+		while(!pq.isEmpty()) {
+			HeapData mule = pq.poll();
+			Tuple tuple = mule.getTuple();
+			int length = checkSize(tuple);
+			int arrayindex = mule.getIndex();
+			Tuple next = temparray[arrayindex].getNextTuple();
+			if(next != null)
+				pq.offer(new HeapData(arrayindex, next));
+			else temparray[arrayindex].close();
+			if(index + length > NUM_OF_BYTES) {
+				first = tuple;
+				break;
+			}
+			writeTuple(buffer,tuple,index);
+			index += length;
+			times++;
+		}
+		buffer.putInt(0, times);
+		return buffer;
+	}
+	
+	/**
+	 * This method is mainly used for writing the tuple into the byte buffer.
+	 * @param buffer the byte buffer used to put the data in.
+	 * @param tuple the tuple that will be put into the byte buffer
+	 * @param index the index shows the location to put in the byte buffer.
+	 */
+	private void writeTuple(ByteBuffer buffer, Tuple tuple, int index) {
+		for(int i=0;i<tuple.datasize();i++) {
+			DataType data = tuple.getData(i);
+			if(data.getType()==1) {
+				long number = data.getLong();
+				buffer.putLong(index, number);
+				index += 8;
+			}else if(data.getType()==2) {
+				String s = data.getString();
+				buffer.put(index, (byte)s.length());
+				index++;
+				for(char c : s.toCharArray()) {
+					buffer.put(index, (byte)c);
+					index++;
+				}
+			}else if(data.getType()==5) {
+				double number = data.getDouble();
+				buffer.putDouble(index, number);
+				index += 8;
+			}
 		}
 	}
 	
