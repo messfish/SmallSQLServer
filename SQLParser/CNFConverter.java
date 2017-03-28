@@ -72,7 +72,7 @@ import SQLExpression.MultipleExpression;
  *             G       H
  *             
  * After we use the De Morgan law, the result should be like this:
- *                AND(M)
+ *                OR(M)
  *              /     \
  *            NOT     NOT
  *             |       |

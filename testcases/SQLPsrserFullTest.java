@@ -23,6 +23,7 @@ import SQLExpression.InOperator;
 import SQLExpression.LessThan;
 import SQLExpression.LikeOperator;
 import SQLExpression.LongValue;
+import SQLExpression.MinusOperator;
 import SQLExpression.MultiplyOperator;
 import SQLExpression.NotOperator;
 import SQLExpression.OrOperator;
@@ -403,6 +404,93 @@ public class SQLPsrserFullTest {
 		assertTrue(check.checkEqual(plain.isDescList(), new int[]{-1,1}));
 		assertEquals(1, plain.getStartPoint());
 		assertEquals(30, plain.getEndPoint());
+	}
+	
+	/**
+	 * This method is used to test complex query by having a union query
+	 * as a sub query in the query.
+	 */
+	@Test
+	public void testCombinations5() {
+		String query = "SELECT S.A , COUNT ( S.B ) AS SB "
+				+ "FROM ( ( SELECT Boats.B "
+				+ "FROM Boats "
+				+ "WHERE Boats.A >= 10.0 ) "
+				+ "UNION "
+				+ "( SELECT Boats.B "
+				+ "FROM Boats "
+				+ "WHERE Boats.C < 1000 ) ) AS B , Sailors AS S "
+				+ "GROUP BY S.A "
+				+ "HAVING MIN ( S.C ) < 100 * ( S.A - S.B )";
+		PlainSelect plain = new PlainSelect(query);
+		assertEquals(0, plain.getUnionType());
+		CheckEquals check = new CheckEquals();
+		List<Expression> list = new ArrayList<>();
+		list.add(new ColumnNode("S.A"));
+		list.add(new ColumnNode("COUNT(S.B)"));
+		assertTrue(check.isEqual(list, plain.getSelectElements()));
+		List<String> list1 = new ArrayList<>();
+		list1.add("");
+		list1.add("SB");
+		assertTrue(check.checkEqual(list1, plain.getSelectAlias()));
+		String subquery = "( SELECT Boats.B "
+				+ "FROM Boats "
+				+ "WHERE Boats.A >= 10.0 ) "
+				+ "UNION "
+				+ "( SELECT Boats.B "
+				+ "FROM Boats "
+				+ "WHERE Boats.C < 1000 )";
+		PlainSelect subplain = new PlainSelect(subquery);
+		assertEquals(1, subplain.getUnionType());
+		Map<String, Table> map = new HashMap<>();
+		map.put("B", new Table("B", subplain));
+		map.put("S", new Table("Sailors"));
+		assertTrue(check.checkEqual(plain.getFromList(), map));
+		assertTrue(check.checkEqual(plain.getWhereExpression(), null));
+		List<String> list2 = new ArrayList<>();
+		list2.add("S.A");
+		assertTrue(check.checkEqual(list2, plain.getGroupByElements()));
+		Expression e1 = new ColumnNode("MIN(S.C)");
+		Expression e2 = new LongValue(100);
+		Expression e3 = new ColumnNode("S.A");
+		Expression e4 = new ColumnNode("S.B");
+		Expression e5 = new MinusOperator(e3,e4);
+		Expression e8 = new Parenthesis(e5);
+		Expression e6 = new MultiplyOperator(e2,e8);
+		Expression e7 = new LessThan(e1,e6);
+		assertTrue(check.checkEqual(plain.getHavingExpression(), e7));
+		assertTrue(check.isEqual(plain.getOrderByElements(), new ArrayList<>()));
+		assertTrue(check.checkEqual(plain.isDescList(), null));
+		PlainSelect left = subplain.getSubQueries()[0],
+				right = subplain.getSubQueries()[1];
+		List<Expression> list3 = new ArrayList<>();
+		list3.add(new ColumnNode("Boats.B"));
+		Map<String, Table> tablemap = new HashMap<>();
+		tablemap.put("Boats", new Table("Boats"));
+		List<String> list4 = new ArrayList<>();
+		list4.add("");
+		assertTrue(check.isEqual(left.getSelectElements(), list3));
+		assertTrue(check.isEqual(right.getSelectElements(), list3));
+		assertTrue(check.checkEqual(left.getFromList(), tablemap));
+		assertTrue(check.checkEqual(right.getFromList(), tablemap));
+		assertTrue(check.checkEqual(left.getSelectAlias(), list4));
+		assertTrue(check.checkEqual(right.getSelectAlias(), list4));
+		Expression e9 = new ColumnNode("Boats.A");
+		Expression e10 = new DoubleValue(10.0);
+		Expression e11 = new GreaterThanOrEquals(e9,e10);
+		Expression e12 = new ColumnNode("Boats.C");
+		Expression e13 = new LongValue(1000);
+		Expression e14 = new LessThan(e12,e13);
+		assertTrue(check.checkEqual(left.getWhereExpression(), e11));
+		assertTrue(check.checkEqual(right.getWhereExpression(), e14));
+		assertTrue(check.checkEqual(left.getGroupByElements(), new ArrayList<>()));
+		assertTrue(check.checkEqual(null, left.getHavingExpression()));
+		assertTrue(check.isEqual(left.getOrderByElements(), new ArrayList<>()));
+		assertTrue(check.checkEqual(left.isDescList(), null));
+		assertTrue(check.checkEqual(right.getGroupByElements(), new ArrayList<>()));
+		assertTrue(check.checkEqual(null, right.getHavingExpression()));
+		assertTrue(check.isEqual(right.getOrderByElements(), new ArrayList<>()));
+		assertTrue(check.checkEqual(right.isDescList(), null));
 	}
 	
 }

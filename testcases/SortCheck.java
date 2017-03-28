@@ -26,6 +26,19 @@ import Support.RandomTable;
  */
 public class SortCheck {
 
+	private static final int NUM_OF_TIMES = 10;	
+	
+	/**
+	 * This method is used to delete the files in a single file 
+	 * directory, which leaves an empty directory.
+	 * @param dir the directory used for executing the operation.
+	 */
+	private void deleteFiles(File dir) {
+		for(File file: dir.listFiles()) 
+		    if (!file.isDirectory()) 
+		        file.delete();
+	}
+	
 	/**
 	 * This method is mainly used for testing a small amount of data.
 	 * By small amount, that means it will not go through the second
@@ -33,9 +46,9 @@ public class SortCheck {
 	 */
 	@Test
 	public void testSmallCase() {
-		Main.setTemp("/Users/messfish/Desktop/SQLdatabase/temp/");
-		Main.setTest("/Users/messfish/Desktop/SQLdatabase/test/");
-		for(int i=0;i<400;i++) {
+		Main.setTemp("/Users/messfish/Desktop/SQLdatabase/temp");
+		Main.setTest("/Users/messfish/Desktop/SQLdatabase/test");
+		for(int i=0;i<NUM_OF_TIMES;i++) {
 			RandomTable random = new RandomTable(1000);
 			File file = random.generate(1);
 			HumanToBinary human = new HumanToBinary();
@@ -48,6 +61,7 @@ public class SortCheck {
 			CheckSort check = new CheckSort(ex);
 			assertTrue(check.checkValid());
 			assertEquals(1000, check.getSize());
+			deleteFiles(new File(Main.getTemp() + "/"));
 		}
 	}
 	
@@ -58,9 +72,9 @@ public class SortCheck {
 	 */
 	@Test
 	public void testMediumCase() {
-		Main.setTemp("/Users/messfish/Desktop/SQLdatabase/temp/");
-		Main.setTest("/Users/messfish/Desktop/SQLdatabase/test/");
-		for(int i=0;i<400;i++){
+		Main.setTemp("/Users/messfish/Desktop/SQLdatabase/temp");
+		Main.setTest("/Users/messfish/Desktop/SQLdatabase/test");
+		for(int i=0;i<NUM_OF_TIMES;i++){
 			RandomTable random = new RandomTable(10000);
 			File file = random.generate(2);
 			HumanToBinary human = new HumanToBinary();
@@ -68,12 +82,13 @@ public class SortCheck {
 			ScanOperator scan = new ScanOperator(temp);
 			List<Expression> list = new ArrayList<>();
 			list.add(new ColumnNode("Test.Ta"));
-			list.add(new ColumnNode("Test.Tc"));
+			list.add(new ColumnNode("Test.Te"));
 			list.add(new ColumnNode("Test.Td"));
 			ExternalSort ex = new ExternalSort(scan, list, 2);
 			CheckSort check = new CheckSort(ex);
 			assertTrue(check.checkValid());
 			assertEquals(10000, check.getSize());
+			deleteFiles(new File(Main.getTemp() + "/"));
 		}
 	}
 	
@@ -84,9 +99,9 @@ public class SortCheck {
 	 */
 	@Test
 	public void testLargeCase() {
-		Main.setTemp("/Users/messfish/Desktop/SQLdatabase/temp/");
-		Main.setTest("/Users/messfish/Desktop/SQLdatabase/test/");
-		for(int i=0;i<400;i++) {
+		Main.setTemp("/Users/messfish/Desktop/SQLdatabase/temp");
+		Main.setTest("/Users/messfish/Desktop/SQLdatabase/test");
+		for(int i=0;i<NUM_OF_TIMES;i++) {
 			RandomTable random = new RandomTable(1000000);
 			File file = random.generate(3);
 			HumanToBinary human = new HumanToBinary();
@@ -94,15 +109,12 @@ public class SortCheck {
 			ScanOperator scan = new ScanOperator(temp);
 			List<Expression> list = new ArrayList<>();
 			list.add(new ColumnNode("Test.Tb"));
-			list.add(new ColumnNode("Test.Td"));
+			list.add(new ColumnNode("Test.Te"));
 			ExternalSort ex = new ExternalSort(scan, list, 3);
 			CheckSort check = new CheckSort(ex);
-			for(int j=1;j<=222;j++) {
-				File filetemp = new File(Main.getTemp()+ "3 " + j);
-				assertTrue(check.checkValid(filetemp));
-			}
 			assertTrue(check.checkValid());
 			assertEquals(1000000, check.getSize());
+			deleteFiles(new File(Main.getTemp() + "/"));
 		}
 	}
 	

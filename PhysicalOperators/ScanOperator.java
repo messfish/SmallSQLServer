@@ -176,6 +176,16 @@ public class ScanOperator extends Operator {
 	}
 	
 	/**
+	 * This abstract method is used to fetch the number of tables in
+	 * the single operator.
+	 * @return the number of tables in this operator.
+	 */
+	@Override
+	public int getNumOfTables() {
+		return numoftables;
+	}
+	
+	/**
 	 * This private method reads a page from the file and stores
 	 * that page into the byte buffer.
 	 * @return the byte buffer, null means nothing left to read.

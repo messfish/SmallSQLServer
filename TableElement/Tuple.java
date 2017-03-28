@@ -1,5 +1,7 @@
 package TableElement;
 
+import java.util.List;
+
 /**
  * This class is used to define a collection of data types and
  * present some methods and constructors for manipulating it.
@@ -76,6 +78,7 @@ public class Tuple {
 	
 	/**
 	 * This method is used to check whether two tuples are equal.
+	 * Notice the tuple in the parameter could not be null.
 	 * @param that the tuple that is used for checking equality.
 	 * @return the boolean value shows whether they are equal or not.
 	 */
@@ -87,6 +90,28 @@ public class Tuple {
 			DataType data2 = that.getData(i);
 			if(data1.compare(data2)!=0) 
 				return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * This method is used to check whether two tuples are equal, based
+	 * on the attributes in the array list. Notice the tuple in the 
+	 * parameter could not be null.
+	 * @param that the tuple that is used for checking equality.
+	 * @param list the list that stores the index of attributes to be checked.
+	 * @return the boolean value shows whether that they are equal or not.
+	 */
+	public boolean isEqual(Tuple that, List<Integer> list) {
+		if(this.datalist.length!=that.datalist.length)
+			return false;
+		for(int i=0;i<this.datasize();i++) {
+			if(list.indexOf(i)!=-1) {
+				DataType data1 = this.getData(i);
+				DataType data2 = that.getData(i);
+				if(data1.compare(data2)!=0) 
+					return false;
+			}
 		}
 		return true;
 	}

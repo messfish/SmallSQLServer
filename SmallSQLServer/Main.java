@@ -1,10 +1,5 @@
 package SmallSQLServer;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Scanner;
 
 import SQLParser.PlainSelect;
@@ -37,6 +32,14 @@ public class Main {
 	 */
 	public static void setInput(String s) {
 		input_dir = s;
+	}
+	
+	/**
+	 * this function is the setter method of the temp directory string.
+	 * @param s the temp directory.
+	 */
+	public static void setTemp(String s) {
+		temp_dir = s;
 	}
 	
 	/**
@@ -133,6 +136,7 @@ public class Main {
 			str = scan.nextLine();
 			while(!str.equals("y")&&!str.equals("n")) {
 				System.out.println("Invalid argument, please try again.");
+				str = scan.nextLine();
 			}
 			if(str.equals("n")) {
 				scan.close();

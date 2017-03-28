@@ -24,6 +24,7 @@ public class SortOperator extends Operator {
 	private List<Tuple> tuplelist;
 	private Map<String, Mule> schema;
 	private int index; // the current index of the tuple list.
+	private int numoftables;
 	
 	/**
 	 * Constructor: this constructor gets all the tuples from an operator
@@ -37,6 +38,7 @@ public class SortOperator extends Operator {
 	 * or descending by showing whether it is 1 or -1.
 	 */
 	public SortOperator(Operator op, List<Expression> orderlist, int[] desclist) {
+		numoftables = op.getNumOfTables();
 		tuplelist = new ArrayList<>();
 		Tuple tuple = null;
 		schema = op.getSchema();
@@ -95,6 +97,16 @@ public class SortOperator extends Operator {
 	@Override
 	public Map<String, Mule> getSchema() {
 		return schema;
+	}
+	
+	/**
+	 * This abstract method is used to fetch the number of tables in
+	 * the single operator.
+	 * @return the number of tables in this operator.
+	 */
+	@Override
+	public int getNumOfTables() {
+		return numoftables;
 	}
 
 }

@@ -73,7 +73,7 @@ public class ExternalSort {
 		}else if(file_index > 2) {
 			merge(ID);
 			file_index--;
-			result = new File(Main.getTemp() + ID + " " + file_index);
+			result = new File(Main.getTemp() + "/" + ID + " " + file_index);
 		}
 	}
 	
@@ -118,7 +118,7 @@ public class ExternalSort {
 				return comparison(t1, t2);
 			}
 		});
-		File file = new File(Main.getTemp() + ID + " " + file_index);
+		File file = new File(Main.getTemp() + "/" + ID + " " + file_index);
 		try{
 			FileOutputStream output = new FileOutputStream(file);
 			FileChannel fc = output.getChannel();
@@ -151,10 +151,10 @@ public class ExternalSort {
 		int index = 4;
 		if(tuple!=null) {
 			list.add(tuple);
-			index += checkSize(tuple);
+			index += op.checkSize(tuple);
 		}
 		while((tuple=op.getNextTuple())!=null) {
-			index += checkSize(tuple);
+			index += op.checkSize(tuple);
 			if(index > NUM_OF_BYTES)
 				return tuple;
 			list.add(tuple);
@@ -162,27 +162,6 @@ public class ExternalSort {
 		/* when we meet this code, that means there are no tuples left
 		 * in the operator, so we simply return null. */ 
 		return null;
-	}
-	
-	/**
-	 * This method is mainly used for checking how many bytes it need to 
-	 * store the whole tuple.
-	 * @param tuple the tuple that will be used for checking.
-	 * @return the number of bytes to store the tuple.
-	 */
-	private int checkSize(Tuple tuple) {
-		int size = 0;
-		for(int i=0; i<tuple.datasize();i++) {
-			DataType data = tuple.getData(i);
-			if(data.getType()==1) 
-				size += 8;
-			/* we need a byte to identify the length of the string. */
-			else if(data.getType()==2)
-				size += data.getString().length() + 1;
-			else if(data.getType()==5)
-				size += 8;
-		}
-		return size;
 	}
 	
 	/**
@@ -231,10 +210,10 @@ public class ExternalSort {
 		int temp = start, index = 4;
 		while(start<list.size()) {
 			Tuple tuple = list.get(start);
-			int length = checkSize(tuple);
+			int length = op.checkSize(tuple);
 			if(index + length > NUM_OF_BYTES) 
 				break;
-			writeTuple(buffer, tuple, index);
+			op.writeTuple(buffer, tuple, index);
 			index += length;
 			start++;
 		}
@@ -260,7 +239,7 @@ public class ExternalSort {
 				int numofoperators = 0;
 				for(;numofoperators<NUM_OF_BUFFER - 1&&current<limit;
 						numofoperators++,current++) {
-					String filelocation = Main.getTemp() + ID + " " + current;
+					String filelocation = Main.getTemp() + "/" + ID + " " + current;
 					File file = new File(filelocation);
 					temparray[numofoperators] = 
 							new TempOperator(file, op.getSchema());
@@ -283,7 +262,7 @@ public class ExternalSort {
 	 */
 	private void writeFile(PriorityQueue<HeapData> pq, 
 						   TempOperator[] temparray, int ID) {
-		File file = new File(Main.getTemp() + ID + " " + file_index);
+		File file = new File(Main.getTemp() + "/" + ID + " " + file_index);
 		try {
 			FileOutputStream out = new FileOutputStream(file);
 			FileChannel fc = out.getChannel();
@@ -312,14 +291,14 @@ public class ExternalSort {
 		ByteBuffer buffer = ByteBuffer.allocate(NUM_OF_BYTES);
 		int index = 4, times = 0;
 		if(first!=null) {
-			writeTuple(buffer, first, index);
-			index += checkSize(first);
+			op.writeTuple(buffer, first, index);
+			index += op.checkSize(first);
 			times++;
 		}
 		while(!pq.isEmpty()) {
 			HeapData mule = pq.poll();
 			Tuple tuple = mule.getTuple();
-			int length = checkSize(tuple);
+			int length = op.checkSize(tuple);
 			int arrayindex = mule.getIndex();
 			Tuple next = temparray[arrayindex].getNextTuple();
 			if(next != null)
@@ -329,41 +308,12 @@ public class ExternalSort {
 				first = tuple;
 				break;
 			}
-			writeTuple(buffer,tuple,index);
+			op.writeTuple(buffer,tuple,index);
 			index += length;
 			times++;
 		}
 		buffer.putInt(0, times);
 		return buffer;
-	}
-	
-	/**
-	 * This method is mainly used for writing the tuple into the byte buffer.
-	 * @param buffer the byte buffer used to put the data in.
-	 * @param tuple the tuple that will be put into the byte buffer
-	 * @param index the index shows the location to put in the byte buffer.
-	 */
-	private void writeTuple(ByteBuffer buffer, Tuple tuple, int index) {
-		for(int i=0;i<tuple.datasize();i++) {
-			DataType data = tuple.getData(i);
-			if(data.getType()==1) {
-				long number = data.getLong();
-				buffer.putLong(index, number);
-				index += 8;
-			}else if(data.getType()==2) {
-				String s = data.getString();
-				buffer.put(index, (byte)s.length());
-				index++;
-				for(char c : s.toCharArray()) {
-					buffer.put(index, (byte)c);
-					index++;
-				}
-			}else if(data.getType()==5) {
-				double number = data.getDouble();
-				buffer.putDouble(index, number);
-				index += 8;
-			}
-		}
 	}
 	
 }

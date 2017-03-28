@@ -72,5 +72,15 @@ public class DistinctOperator extends Operator {
 	public Map<String, Mule> getSchema() {
 		return op.getSchema();
 	}
+	
+	/**
+	 * This abstract method is used to fetch the number of tables in
+	 * the single operator.
+	 * @return the number of tables in this operator.
+	 */
+	@Override
+	public int getNumOfTables() {
+		return op.getNumOfTables();
+	}
 
 }

@@ -432,7 +432,7 @@ public class CloneExpression implements CloneExpressionVisitor {
 	 */
 	@Override
 	public Expression visit(DateValue value) {
-		return new DateValue(value.getString());
+		return new DateValue(value.getData());
 	}
 
 	/**
@@ -443,7 +443,7 @@ public class CloneExpression implements CloneExpressionVisitor {
 	 */
 	@Override
 	public Expression visit(TimeValue value) {
-		return new TimeValue(value.getString());
+		return new TimeValue(value.getData());
 	}
 
 }

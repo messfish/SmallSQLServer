@@ -8,17 +8,16 @@ import Support.Mule;
 import TableElement.Tuple;
 
 /**
- * This class handles the logic of scan operator. Basically it scans the 
- * whole table(which usually indicates we need a scan operator). After that
- * , I use a class that implements the expression visitor to tell whether
- * this tuple is a valid one. Scan the next tuple until we get the valid
- * one and return that tuple.
+ * This class is mainly used to handle the having expression.
+ * It is exactly similar to the where expression: evaluate the 
+ * tuples coming from the GroupByOperator and return that tuple if that
+ * tuple satisfies the evaluation.
  * @author messfish
  *
  */
-public class SelectOperator extends Operator{
+public class HavingOperator extends Operator {
 
-	private Operator scan; // object that performs the scanning.
+	private Operator op; // object that performs the scanning.
 	private Expression express; // object stores the expression.
 	
 	/**
@@ -27,13 +26,13 @@ public class SelectOperator extends Operator{
 	 * @param operator the operator needs to be passed.
 	 * @param express the expression that will be passed.
 	 */
-	public SelectOperator(Operator operator, Expression express) {
-		scan = operator;
+	public HavingOperator(Operator operator, Expression express) {
+		op = operator;
 		this.express = express;
 	}
 
 	/**
-	 * This method is used to get the next valid tuple from the
+	 * This method is used to get the next valid tuple from the 
 	 * operator. get one tuple from the Operator, use a evaluator
 	 * to check whether it is valid or not. If not, get the next tuple
 	 * until the tuple is valid. If yes, return that tuple.
@@ -41,13 +40,13 @@ public class SelectOperator extends Operator{
 	 */
 	@Override
 	public Tuple getNextTuple() {
-		Tuple tuple = scan.getNextTuple();
+		Tuple tuple = op.getNextTuple();
 		if(tuple == null) return null;
 		/* this usually indicates no where language. return that tuple. */
 		if(express==null) return tuple;
 		Evaluator eva = new Evaluator(tuple, express, getSchema());
 		while(!eva.checkValid()) {
-			tuple = scan.getNextTuple();
+			tuple = op.getNextTuple();
 			if(tuple == null) return null;
 			eva = new Evaluator(tuple,express,getSchema());
 		}
@@ -61,7 +60,7 @@ public class SelectOperator extends Operator{
 	 */
 	@Override
 	public void reset() {
-		scan.reset();
+		op.reset();
 	}
 
 	/**
@@ -71,17 +70,17 @@ public class SelectOperator extends Operator{
 	 */
 	@Override
 	public Map<String, Mule> getSchema() {
-		return scan.getSchema();
+		return op.getSchema();
 	}
 	
 	/**
 	 * This abstract method is used to fetch the number of tables in
-	 * the single operator.
+	 * the single operator. For this operator, we simply return 1.
 	 * @return the number of tables in this operator.
 	 */
 	@Override
 	public int getNumOfTables() {
-		return scan.getNumOfTables();
+		return 1;
 	}
-	
+
 }

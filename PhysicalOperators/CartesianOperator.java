@@ -18,7 +18,7 @@ import TableElement.Tuple;
 public class CartesianOperator extends Operator {
 
 	private ScanOperator[] scanlist;
-	int size; // this indicates how many attributes in the table.
+	private int size; // this indicates how many attributes in the table.
 	private Map<String, Mule> schema;
 	
 	/**
@@ -30,8 +30,7 @@ public class CartesianOperator extends Operator {
 	public CartesianOperator(Map<String, Table> map, Catalog catalog) {
 		scanlist = new ScanOperator[map.size()];
 		schema = new HashMap<>();
-		
-		int index = 0;
+		int index = 0, previous = 0;
 		String[] aliasarray = new String[map.size()];
 		for(Map.Entry<String, Table> entry : map.entrySet()) {
 			String locate = entry.getKey();
@@ -46,8 +45,11 @@ public class CartesianOperator extends Operator {
 			for(Map.Entry<String, Mule> entry : schema.entrySet()) {
 				String part = entry.getKey().split("\\.")[1];
 				String combination = aliasarray[i] + "." + part;
+				Mule mule = entry.getValue();
+				mule.setIndex(previous + mule.getIndex());
 				this.schema.put(combination, entry.getValue());
 			}
+			previous += schema.size();
 		}
 	}
 	
@@ -98,6 +100,16 @@ public class CartesianOperator extends Operator {
 	}
 	
 	/**
+	 * This abstract method is used to fetch the number of tables in
+	 * the single operator.
+	 * @return the number of tables in this operator.
+	 */
+	@Override
+	public int getNumOfTables() {
+		return scanlist.length;
+	}
+	
+	/**
 	 * This method recursively go through the tuple list and when the
 	 * during the post traverse, check whether the table is running out
 	 * of the tuple. If yes, reset the operator and return a false value.
@@ -139,8 +151,9 @@ public class CartesianOperator extends Operator {
 	 * @param result the tuple used for storing result.
 	 */
 	private void setTuple(int index, int start, Tuple tuple, Tuple result) {
-		for(int i=start;i<tuple.datasize();i++)
+		for(int i=start;i<start+tuple.datasize();i++){
 			result.setData(i, tuple.getData(i - start));
+		}
 		result.setTupleID(index, tuple.getTupleID(0));
 	}
 

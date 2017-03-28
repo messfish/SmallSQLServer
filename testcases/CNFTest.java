@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import SQLExpression.AndOperator;
 import SQLExpression.ColumnNode;
+import SQLExpression.DateValue;
 import SQLExpression.DoubleValue;
 import SQLExpression.Equals;
 import SQLExpression.Expression;
@@ -18,6 +19,7 @@ import SQLExpression.InOperator;
 import SQLExpression.LessThan;
 import SQLExpression.LessThanOrEquals;
 import SQLExpression.LikeOperator;
+import SQLExpression.LongValue;
 import SQLExpression.MultiAndOperator;
 import SQLExpression.MultiOrOperator;
 import SQLExpression.NotEquals;
@@ -25,6 +27,7 @@ import SQLExpression.NotOperator;
 import SQLExpression.OrOperator;
 import SQLExpression.Parenthesis;
 import SQLExpression.StringValue;
+import SQLExpression.TimeValue;
 import SQLParser.CNFConverter;
 import SQLParser.CheckEquals;
 
@@ -37,17 +40,17 @@ import SQLParser.CheckEquals;
  */
 public class CNFTest {
 
-	private Expression original1, original2, original3;
+	private Expression original1, original2, original3, original4, original5;
 	// these expressions stores the original expression tree.
-	private Expression stepone1, stepone2, stepone3;
+	private Expression stepone1, stepone2, stepone3, stepone4, stepone5;
 	// these expressions stores the step one of the expression tree.
-	private Expression steptwo1, steptwo2, steptwo3;
+	private Expression steptwo1, steptwo2, steptwo3, steptwo4, steptwo5;
 	// these expression stores the step two of the expression tree.
-	private Expression stepthree1, stepthree2, stepthree3;
+	private Expression stepthree1, stepthree2, stepthree3, stepthree4, stepthree5;
 	// these expression stores the step three of the expression tree.
-	private Expression steplast1, steplast2, steplast3;
+	private Expression steplast1, steplast2, steplast3, steplast4, steplast5;
 	// these expression stores the last step of the expression tree.
-	private CNFConverter cnf1, cnf2, cnf3;
+	private CNFConverter cnf1, cnf2, cnf3, cnf4, cnf5;
 	// generate three CNF converter objects to handle the 
 	// conversion of three expression trees.
 	private CheckEquals check;
@@ -62,21 +65,33 @@ public class CNFTest {
 		buildOriginalExpression1();
 		buildOriginalExpression2();
 		buildOriginalExpression3();
+		buildOriginalExpression4();
+		buildOriginalExpression5();
 		buildStepOneExpression1();
 		buildStepOneExpression2();
 		buildStepOneExpression3();
+		buildStepOneExpression4();
+		buildStepOneExpression5();
 		buildStepTwoExpression1();
 		buildStepTwoExpression2();
 		buildStepTwoExpression3();
+		buildStepTwoExpression4();
+		buildStepTwoExpression5();
 		buildStepThreeExpression1();
 		buildStepThreeExpression2();
 		buildStepThreeExpression3();
+		buildStepThreeExpression4();
+		buildStepThreeExpression5();
 		buildStepLastExpression1();
 		buildStepLastExpression2();
 		buildStepLastExpression3();
+		buildStepLastExpression4();
+		buildStepLastExpression5();
 		cnf1 = new CNFConverter();
 		cnf2 = new CNFConverter();
 		cnf3 = new CNFConverter();
+		cnf4 = new CNFConverter();
+		cnf5 = new CNFConverter();
 		check = new CheckEquals();
 	}
 	
@@ -102,6 +117,10 @@ public class CNFTest {
 		assertTrue(check.checkEqual(cnf2.getRoot(), stepone2));
 		cnf3.reorder(original3);
 		assertTrue(check.checkEqual(cnf3.getRoot(), stepone3));
+		cnf4.reorder(original4);
+		assertTrue(check.checkEqual(cnf4.getRoot(), stepone4));
+		cnf5.reorder(original5);
+		assertTrue(check.checkEqual(cnf5.getRoot(), stepone5));
 	}
 	
 	@Test
@@ -119,6 +138,12 @@ public class CNFTest {
 		cnf3.reorder(original3);
 		cnf3.pushNotDown();
 		assertTrue(check.checkEqual(cnf3.getRoot(), steptwo3));
+		cnf4.reorder(original4);
+		cnf4.pushNotDown();
+		assertTrue(check.checkEqual(cnf4.getRoot(), steptwo4));
+		cnf5.reorder(original5);
+		cnf5.pushNotDown();
+		assertTrue(check.checkEqual(cnf5.getRoot(), steptwo5));
 	}
 	
 	@Test
@@ -139,6 +164,14 @@ public class CNFTest {
 		cnf3.pushNotDown();
 		cnf3.gather();
 		assertTrue(check.checkEqual(cnf3.getRoot(), stepthree3));
+		cnf4.reorder(original4);
+		cnf4.pushNotDown();
+		cnf4.gather();
+		assertTrue(check.checkEqual(cnf4.getRoot(), stepthree4));
+		cnf5.reorder(original5);
+		cnf5.pushNotDown();
+		cnf5.gather();
+		assertTrue(check.checkEqual(cnf5.getRoot(), stepthree5));
 	}
 
 	@Test
@@ -162,6 +195,16 @@ public class CNFTest {
 		cnf3.gather();
 		cnf3.pushAndUp();
 		assertTrue(check.checkEqual(cnf3.getRoot(), steplast3));
+		cnf4.reorder(original4);
+		cnf4.pushNotDown();
+		cnf4.gather();
+		cnf4.pushAndUp();
+		assertTrue(check.checkEqual(cnf4.getRoot(), steplast4));
+		cnf5.reorder(original5);
+		cnf5.pushNotDown();
+		cnf5.gather();
+		cnf5.pushAndUp();
+		assertTrue(check.checkEqual(cnf5.getRoot(), steplast5));
 	}
 	
 	/**
@@ -176,10 +219,16 @@ public class CNFTest {
 		assertTrue(check.checkEqual(cnf2.getRoot(), steplast2));
 		cnf3.convert(original3);
 		assertTrue(check.checkEqual(cnf3.getRoot(), steplast3));
+		cnf4.convert(original4);
+		assertTrue(check.checkEqual(cnf4.getRoot(), steplast4));
+		cnf5.convert(original5);
+		assertTrue(check.checkEqual(cnf5.getRoot(), steplast5));
 	}
 	
 	/**
 	 * this method is used to build the original expression tree 1.
+	 * The purpose of this method is to check when there is a Not Operator
+	 * at the root. Which means the root must be switched.
 	 */
 	private void buildOriginalExpression1() {
 		Expression e1 = new DoubleValue(1.2);
@@ -203,6 +252,9 @@ public class CNFTest {
 	
 	/**
 	 * this method is used to build the original expression tree 2.
+	 * The purpose is to test the double negation law. As you can 
+	 * see when you build the tree, there will be two Not Operators 
+	 * together on the line. It is there when we use the double negation law.
 	 */
 	private void buildOriginalExpression2() {
 		Expression e1 = new DoubleValue(1.1);
@@ -228,6 +280,9 @@ public class CNFTest {
 	
 	/**
 	 * this method is used to build the original expression tree 3.
+	 * This is the case when we test a more complex tree structure,
+	 * Notice you could see the amount of line to build up the CNF tree.
+	 * You could tell how complicated the CNF could be.
 	 */
 	private void buildOriginalExpression3() {
 		Expression e1 = new DoubleValue(3.0);
@@ -268,6 +323,43 @@ public class CNFTest {
 		Expression e36 = new Parenthesis(e28);
 		Expression e37 = new Parenthesis(e35);
 		original3 = new OrOperator(e36, e37);
+	}
+	
+	/**
+	 * This method is used for building the original expression tree 4.
+	 * This is the case when we test a very simple tree structure that 
+	 * has neither AND operator or OR operator.
+	 */
+	private void buildOriginalExpression4() {
+		Expression e1 = new ColumnNode("S.D");
+		Expression e2 = new DateValue("2017/03/25");
+		Expression e3 = new GreaterThan(e1,e2);
+		original4 = new NotOperator(e3);
+	}
+	
+	/**
+	 * This method is used for building the original expression tree 5.
+	 * This is the case when we test the tree that only contains AND
+	 * operator without having an OR operator.
+	 */
+	private void buildOriginalExpression5() {
+		Expression e1 = new ColumnNode("S.A");
+		Expression e2 = new DoubleValue(3.5);
+		Expression e3 = new ColumnNode("S.B");
+		Expression e4 = new LongValue(4);
+		Expression e5 = new ColumnNode("S.C");
+		Expression e6 = new TimeValue("12:04:34");
+		Expression e7 = new ColumnNode("S.D");
+		Expression e8 = new StringValue("sddsds");
+		Expression e9 = new GreaterThan(e1,e2);
+		Expression e10 = new LessThan(e3,e4);
+		Expression e11 = new LikeOperator(e5,e6);
+		Expression e12 = new Equals(e7,e8);
+		Expression e13 = new AndOperator(e9,e10);
+		Expression e14 = new OrOperator(e11,e12);
+		Expression e15 = new NotOperator(e13);
+		Expression e16 = new OrOperator(e15,e14);
+		original5 = new NotOperator(e16);
 	}
 	
 	/**
@@ -397,6 +489,48 @@ public class CNFTest {
 		list8.add(e28);
 		list8.add(e35);
 		stepone3 = new MultiOrOperator(list8);
+	}
+	
+	/**
+	 * this method is used to build the step one expression tree 4.
+	 */
+	private void buildStepOneExpression4() {
+		Expression e1 = new ColumnNode("S.D");
+		Expression e2 = new DateValue("2017/03/25");
+		Expression e3 = new GreaterThan(e1,e2);
+		stepone4 = new NotOperator(e3);
+	}
+	
+	/**
+	 * this method is used to build the step one expression tree 1.
+	 */
+	private void buildStepOneExpression5() {
+		Expression e1 = new ColumnNode("S.A");
+		Expression e2 = new DoubleValue(3.5);
+		Expression e3 = new ColumnNode("S.B");
+		Expression e4 = new LongValue(4);
+		Expression e5 = new ColumnNode("S.C");
+		Expression e6 = new TimeValue("12:04:34");
+		Expression e7 = new ColumnNode("S.D");
+		Expression e8 = new StringValue("sddsds");
+		Expression e9 = new GreaterThan(e1,e2);
+		Expression e10 = new LessThan(e3,e4);
+		Expression e11 = new LikeOperator(e5,e6);
+		Expression e12 = new Equals(e7,e8);
+		List<Expression> list1 = new ArrayList<>();
+		list1.add(e9);
+		list1.add(e10);
+		Expression e13 = new MultiAndOperator(list1);
+		List<Expression> list2 = new ArrayList<>();
+		list2.add(e11);
+		list2.add(e12);
+		Expression e14 = new MultiOrOperator(list2);
+		Expression e15 = new NotOperator(e13);
+		List<Expression> list3 = new ArrayList<>();
+		list3.add(e15);
+		list3.add(e14);
+		Expression e16 = new MultiOrOperator(list3);
+		stepone5 = new NotOperator(e16);
 	}
 	
 	/**
@@ -534,6 +668,48 @@ public class CNFTest {
 	}
 	
 	/**
+	 * this method is used to build the step two expression tree 4.
+	 */
+	private void buildStepTwoExpression4() {
+		Expression e1 = new ColumnNode("S.D");
+		Expression e2 = new DateValue("2017/03/25");
+		Expression e3 = new GreaterThan(e1,e2);
+		steptwo4 = new NotOperator(e3);
+	}
+	
+	/**
+	 * this method is used to build the step two expression tree 4.
+	 */
+	private void buildStepTwoExpression5() {
+		Expression e1 = new ColumnNode("S.A");
+		Expression e2 = new DoubleValue(3.5);
+		Expression e3 = new ColumnNode("S.B");
+		Expression e4 = new LongValue(4);
+		Expression e5 = new ColumnNode("S.C");
+		Expression e6 = new TimeValue("12:04:34");
+		Expression e7 = new ColumnNode("S.D");
+		Expression e8 = new StringValue("sddsds");
+		Expression e9 = new GreaterThan(e1,e2);
+		Expression e10 = new LessThan(e3,e4);
+		Expression e11 = new LikeOperator(e5,e6);
+		Expression e12 = new Equals(e7,e8);
+		Expression e13 = new NotOperator(e11);
+		Expression e14 = new NotOperator(e12);
+		List<Expression> list1 = new ArrayList<>();
+		list1.add(e9);
+		list1.add(e10);
+		Expression e15 = new MultiAndOperator(list1);
+		List<Expression> list2 = new ArrayList<>();
+		list2.add(e13);
+		list2.add(e14);
+		Expression e16 = new MultiAndOperator(list2);
+		List<Expression> list3 = new ArrayList<>();
+		list3.add(e15);
+		list3.add(e16);
+		steptwo5 = new MultiAndOperator(list3);
+	}
+	
+	/**
 	 * this method is used to build the step three expression tree 1.
 	 */
 	private void buildStepThreeExpression1() {
@@ -659,6 +835,42 @@ public class CNFTest {
 		list6.add(e29);
 		list6.add(e36);
 		stepthree3 = new MultiOrOperator(list6);
+	}
+	
+	/**
+	 * this method is used to build the step three expression tree 4.
+	 */
+	private void buildStepThreeExpression4() {
+		Expression e1 = new ColumnNode("S.D");
+		Expression e2 = new DateValue("2017/03/25");
+		Expression e3 = new GreaterThan(e1,e2);
+		stepthree4 = new NotOperator(e3);
+	}
+	
+	/**
+	 * this method is used to build the step three expression tree 5.
+	 */
+	private void buildStepThreeExpression5() {
+		Expression e1 = new ColumnNode("S.A");
+		Expression e2 = new DoubleValue(3.5);
+		Expression e3 = new ColumnNode("S.B");
+		Expression e4 = new LongValue(4);
+		Expression e5 = new ColumnNode("S.C");
+		Expression e6 = new TimeValue("12:04:34");
+		Expression e7 = new ColumnNode("S.D");
+		Expression e8 = new StringValue("sddsds");
+		Expression e9 = new GreaterThan(e1,e2);
+		Expression e10 = new LessThan(e3,e4);
+		Expression e11 = new LikeOperator(e5,e6);
+		Expression e12 = new Equals(e7,e8);
+		Expression e13 = new NotOperator(e11);
+		Expression e14 = new NotOperator(e12);
+		List<Expression> list = new ArrayList<>();
+		list.add(e9);
+		list.add(e10);
+		list.add(e13);
+		list.add(e14);
+		stepthree5 = new MultiAndOperator(list);
 	}
 	
 	/**
@@ -1129,6 +1341,42 @@ public class CNFTest {
 		list19.add(e245);
 		list19.add(e246);
 		steplast3 = new MultiAndOperator(list19);
+	}
+	
+	/**
+	 * this method is used to build the step last expression tree 4.
+	 */
+	private void buildStepLastExpression4() {
+		Expression e1 = new ColumnNode("S.D");
+		Expression e2 = new DateValue("2017/03/25");
+		Expression e3 = new GreaterThan(e1,e2);
+		steplast4 = new NotOperator(e3);
+	}
+	
+	/**
+	 * this method is used to build the step last expression tree 5.
+	 */
+	private void buildStepLastExpression5() {
+		Expression e1 = new ColumnNode("S.A");
+		Expression e2 = new DoubleValue(3.5);
+		Expression e3 = new ColumnNode("S.B");
+		Expression e4 = new LongValue(4);
+		Expression e5 = new ColumnNode("S.C");
+		Expression e6 = new TimeValue("12:04:34");
+		Expression e7 = new ColumnNode("S.D");
+		Expression e8 = new StringValue("sddsds");
+		Expression e9 = new GreaterThan(e1,e2);
+		Expression e10 = new LessThan(e3,e4);
+		Expression e11 = new LikeOperator(e5,e6);
+		Expression e12 = new Equals(e7,e8);
+		Expression e13 = new NotOperator(e11);
+		Expression e14 = new NotOperator(e12);
+		List<Expression> list = new ArrayList<>();
+		list.add(e9);
+		list.add(e10);
+		list.add(e13);
+		list.add(e14);
+		steplast5 = new MultiAndOperator(list);
 	}
 	
 }

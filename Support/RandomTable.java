@@ -39,7 +39,8 @@ public class RandomTable {
 			StringBuilder sb = new StringBuilder();
 			sb.append("Test.Ta ").append("1 ").append("Test.Tb ")
 			  .append("5 ").append("Test.Tc ").append("3 ")
-			  .append("Test.Td ").append("4 ").append("\n");
+			  .append("Test.Td ").append("4 ").append("Test.Te ")
+			  .append("3 ").append("\n");
 			BufferedWriter write = new BufferedWriter(new FileWriter(result));
 			while(size<limit) {
 				sb.append(size + 1).append(" ");
@@ -51,6 +52,7 @@ public class RandomTable {
 				sb.append(str1.length()).append("/").append(str1 + " ");
 				generateRandomDate(sb);
 				generateRandomTime(sb);
+				generateRandomString(sb);
 				sb.append("\n");
 				size++;
 			}
@@ -80,7 +82,7 @@ public class RandomTable {
 	/**
 	 * This is the helper function that writes the time with a random
 	 * value. Notice it must falls into the defined range.
-	 * @param sb the string that stores the randomly generated date.
+	 * @param sb the string that stores the randomly generated time.
 	 */
 	private void generateRandomTime(StringBuilder sb) {
 		int hour = (int)(Math.random()*24);
@@ -90,6 +92,25 @@ public class RandomTable {
 					 String.format("%02d", minute) + ":" +
 					 String.format("%02d", second);
 		sb.append(str.length()).append("/").append(str + " ");
+	}
+	
+	/**
+	 * This is the helper function that writes the string with a 
+	 * random value and random length.
+	 * @param sb the string that stores the randomly generated string.
+	 */
+	private void generateRandomString(StringBuilder sb) {
+		char[] templist = {'a','b','c','d','e','f','g','h','i','j','k','l',
+				'm','n','o','p','q','r','s','t','u','v','w','x','y','z',
+				'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O'
+				,'P','Q','R','S','T','U','V','W','X','Y','Z'};
+		int length = (int)(Math.random()*127);
+		StringBuilder temp = new StringBuilder();
+		for(int i=0;i<length;i++) {
+			char c = templist[(int)(Math.random()*templist.length)];
+			temp.append(c);
+		}
+		sb.append(length).append("/").append(temp.toString() + " ");
 	}
 	
 }

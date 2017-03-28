@@ -107,6 +107,7 @@ public class DataType {
 	 * two data types are literally equal.
 	 * @param that another data type that needs to be compared.
 	 * @return the integer indicates the relative greatness of the data type.
+	 * @throws IllegalArgumentException throw this when the type does not match.
 	 */
 	public int compare(DataType that) throws IllegalArgumentException {
 		if(this.type != that.type)
@@ -134,6 +135,47 @@ public class DataType {
 			System.out.println(stringdata);
 		if(type == 5)
 			System.out.println(doubledata);
+	}
+	
+	/**
+	 * This method is used to make an add operation for two data types.
+	 * @param that the other data type used for addition.
+	 * @return the data type with the addition of two elements.
+	 * @throws IllegalArgumentException throw this when the type does
+	 * not match or the type indicates this is a string.
+	 */
+	public DataType add(DataType that) throws IllegalArgumentException {
+		if(this.type != that.type)
+			throw new IllegalArgumentException
+						("These two data types are not the same type!");
+		if(this.type == 2)
+			throw new IllegalArgumentException
+						("The parameter cannot be a string!");
+		DataType result = null;
+		if(this.type == 1)
+			result = new DataType(this.longdata + that.longdata);
+		if(this.type == 5)
+			result = new DataType(this.doubledata + that.doubledata);
+		return result;
+	}
+	
+	/**
+	 * This method is used to make a division for a datatype that calls
+	 * this method divided by the number in the argument.
+	 * @param num the number used for division.
+	 * @return the data type with the calculated result.
+	 * @throws IllegalArgumentException throw this when the type is a string.
+	 */
+	public DataType divide(long num) throws IllegalArgumentException {
+		if(this.type == 2)
+			throw new IllegalArgumentException
+						("The parameter cannot be a string!");
+		DataType result = null;
+		if(this.type == 1)
+			result = new DataType(this.longdata / num);
+		if(this.type == 5)
+			result = new DataType(this.doubledata / num);
+		return result;
 	}
 	
 }
